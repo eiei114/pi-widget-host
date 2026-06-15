@@ -1,88 +1,105 @@
-# PACKAGE_DISPLAY_NAME
+# Pi Widget Host
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
-[![Publish](https://github.com/OWNER/REPO/actions/workflows/publish.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/publish.yml)
-[![npm version](https://img.shields.io/npm/v/PACKAGE_NAME.svg)](https://www.npmjs.com/package/PACKAGE_NAME)
-[![npm downloads](https://img.shields.io/npm/dm/PACKAGE_NAME.svg)](https://www.npmjs.com/package/PACKAGE_NAME)
+[![CI](https://github.com/eiei114/pi-widget-host/actions/workflows/ci.yml/badge.svg)](https://github.com/eiei114/pi-widget-host/actions/workflows/ci.yml)
+[![Publish](https://github.com/eiei114/pi-widget-host/actions/workflows/publish.yml/badge.svg)](https://github.com/eiei114/pi-widget-host/actions/workflows/publish.yml)
+[![npm version](https://img.shields.io/npm/v/pi-widget-host.svg)](https://www.npmjs.com/package/pi-widget-host)
+[![npm downloads](https://img.shields.io/npm/dm/pi-widget-host.svg)](https://www.npmjs.com/package/pi-widget-host)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Pi package](https://img.shields.io/badge/pi-package-purple.svg)](https://pi.dev/packages)
 [![Trusted Publishing](https://img.shields.io/badge/npm-Trusted%20Publishing-blue.svg)](docs/release.md)
 
-> One-line pitch for this TypeScript-first Pi package.
+> Shared-slot host for managing one prompt-top Pi widget across multiple providers.
 
 ## What this is
 
-Briefly explain what this TypeScript-first package adds to Pi and who should use it.
+`pi-widget-host` owns one shared widget slot in Pi and picks a single winner from registered providers.
+
+v1 is a **Host-only MVP**:
+
+- user-global config under `~/.pi/agent/`
+- preset-first time-block policy
+- `globalThis` registry protocol for future provider packages
+- built-in demo provider for setup and dogfooding
+- silent empty slot when nothing should render
 
 ## Features
 
-- Feature 1
-- Feature 2
-- Feature 3
+- `/widget-host:setup` guided first-run flow
+- `/widget-host:status`, `/widget-host:policy`, `/widget-host:providers`
+- `/widget-host:mute` and `/widget-host:unmute`
+- event boost for `playing-now` and `matchday`
+- known host tags: `music`, `sports`, `playing-now`, `matchday`, `idle`
 
 ## Install
 
-Install the published npm package with Pi:
+Published package:
 
 ```bash
-pi install npm:PACKAGE_NAME
+pi install npm:pi-widget-host
 ```
 
-Replace `PACKAGE_NAME` with the exact `name` from `package.json`.
-For a scoped npm package, keep the `npm:` prefix:
+GitHub install:
 
 ```bash
-pi install npm:@your-scope/your-pi-package
+pi install git:github.com/eiei114/pi-widget-host
 ```
 
-Pin a specific version when you want reproducible installs:
-
-```bash
-pi install npm:PACKAGE_NAME@0.1.0
-```
-
-Install into the current project instead of your user Pi settings:
-
-```bash
-pi install npm:PACKAGE_NAME -l
-```
-
-Or install from GitHub:
-
-```bash
-pi install git:github.com/OWNER/REPO
-```
-
-Try it without permanently installing:
-
-```bash
-pi -e npm:PACKAGE_NAME
-```
-
-## Quick start
-
-Try this package locally:
+Local dev:
 
 ```bash
 pi -e .
 ```
 
-Then run:
+## Quick start
+
+Run the host locally, then open these commands:
 
 ```txt
-/your-command
+/widget-host:setup
+/widget-host:status
+/widget-host:providers
 ```
+
+`/widget-host:setup` asks whether to enable the built-in demo provider and which preset policy to save.
+
+## Commands
+
+- `/widget-host:setup` — save initial preset and optionally enable the demo provider
+- `/widget-host:status` — report setup status, preset, and active provider
+- `/widget-host:policy` — show or change the saved preset
+- `/widget-host:providers` — inspect known provider entries and effective state
+- `/widget-host:mute` — mute one provider in host config
+- `/widget-host:unmute` — unmute one provider in host config
+
+Commands take no inline arguments. Input is collected with Pi UI prompts.
+
+## Registry protocol
+
+Future provider packages can publish to the host without importing this package at runtime.
+
+- backing: `globalThis`
+- symbol: `Symbol.for("pi-widget-host.registry.v1")`
+- required fields: `providerId`, `available`, `lines`, `updatedAt`
+- optional fields: `priority`, `tags`, `mode`, `ttlMs`
+
+See [`docs/protocol.md`](docs/protocol.md).
+
+## Built-in demo provider
+
+The built-in demo provider exists to prove the host loop first:
+
+- setup enables it explicitly
+- it publishes through the same registry protocol as future packages
+- it renders provider-owned lines through the shared host slot
+- if muted, disabled, or filtered out by policy, the slot disappears
 
 ## Package contents
 
 | Path | Purpose |
 |---|---|
-| `extensions/` | Pi TypeScript extension entrypoints (`*.ts` and `index.ts`) |
-| `lib/` | Shared TypeScript helpers |
-| `skills/` | Agent Skills |
-| `prompts/` | Prompt templates |
-| `themes/` | Pi themes |
-| `docs/` | Optional supporting docs (usage, examples, release, ADRs) |
+| `extensions/` | Pi extension entrypoint and command registration |
+| `lib/` | config store, registry protocol, policy evaluation, demo provider |
+| `docs/` | supporting docs such as release and protocol notes |
 
 ## Development
 
@@ -91,73 +108,29 @@ npm install
 npm run ci
 ```
 
-## Development flow
-
-Use this default flow when building a new Pi extension OSS project from this template:
-
-1. Create the Vault project notes under `4_Project/<ProjectName>/`.
-2. Add `CONTEXT.md`, `README.md`, `ROADMAP.md`, `Docs/`, `Issues/`, and `Progress/`.
-3. Write the PRD in `4_Project/<ProjectName>/Docs/`.
-4. Split approved tracer-bullet issues into `4_Project/<ProjectName>/Issues/`.
-5. Implement in the OSS repo.
-6. Run `npm run ci`, `npm test`, and `npm pack --dry-run`.
-7. Release with Trusted Publishing.
-8. Save release notes and follow-up decisions back to the Vault project.
-
-Short version:
-
-```txt
-Vault notes -> PRD -> Issues -> implement -> ci/check -> release -> save learnings
-```
-
 ## Release
 
-This package is set up for npm Trusted Publishing, so no `NPM_TOKEN` is required.
+This package uses npm Trusted Publishing.
 
 ```bash
 npm version patch
 git push
 ```
 
-See [`docs/release.md`](docs/release.md) for setup details.
-
-## Docs
-
-`docs/` is optional supporting documentation, not a fixed six-file set. README stays the GitHub/npm entrypoint; add `docs/*.md` only when they help users or maintainers.
-
-After creating a repository from this template:
-
-1. Follow [`docs/template-checklist.md`](docs/template-checklist.md) for setup.
-2. Run the **post-generation docs cleanup** in that checklist: delete or merge template bootstrap docs that no longer add project value.
-
-Useful docs to keep when they add value:
-
-- [`docs/examples.md`](docs/examples.md) — examples for extensions, skills, prompts, and themes
-- [`docs/release.md`](docs/release.md) — Trusted Publishing details (README Release summarizes the flow)
-- `docs/usage.md` — create when usage does not fit in README
-
-Optional maintainer guidance (not a public-user navigation target in mature repos):
-
-- [`docs/template-checklist.md`](docs/template-checklist.md)
-
-Template bootstrap docs to delete or merge after setup unless they still teach something project-specific:
-
-- `docs/github-template.md`
-- `docs/repository-settings.md`
-- `docs/typescript.md`
+See [`docs/release.md`](docs/release.md).
 
 ## Security
 
-Pi packages can execute code with your local permissions. Review extensions before installing third-party packages.
+Pi packages execute with your local permissions. Review extensions before installing third-party packages.
 
 For vulnerability reporting, see [`SECURITY.md`](SECURITY.md).
 
 ## Links
 
-- npm: https://www.npmjs.com/package/PACKAGE_NAME
-- GitHub: https://github.com/OWNER/REPO
-- Issues: https://github.com/OWNER/REPO/issues
+- npm: https://www.npmjs.com/package/pi-widget-host
+- GitHub: https://github.com/eiei114/pi-widget-host
+- Issues: https://github.com/eiei114/pi-widget-host/issues
 
 ## License
 
-MIT\n
+MIT
