@@ -45,6 +45,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "pi-widget-core": "^0.1.0"
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
   },

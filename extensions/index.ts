@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readHostConfig, updateHostConfig, writeHostConfig } from "../lib/config.ts";
 import { stopDemoProviderHeartbeat, syncBuiltInDemoProvider } from "../lib/demo-provider.ts";
 import { DEFAULT_PRESET_ID, describePreset, evaluateProviderEntries, getPreset, getRemainingTtlMs, PRESET_OPTIONS } from "../lib/policy.ts";
-import { getWidgetHostRegistry, listProviderEntries, removeProviderEntry } from "../lib/registry.ts";
+import { clearHostPresent, getWidgetHostRegistry, listProviderEntries, markHostPresent, removeProviderEntry } from "../lib/registry.ts";
 import { DEMO_PROVIDER_ID, WIDGET_ID, type HostConfig, type PolicyEvaluationResult, type ProviderState } from "../lib/types.ts";
 
 type NotifyLevel = "info" | "warning" | "error";
@@ -103,6 +103,7 @@ export default function widgetHostExtension(pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     if (!ctx.hasUI) return;
     bindUi(ctx as { hasUI: boolean; ui: HostUiBridge });
+    markHostPresent();
     ensureRegistryWatcher();
     await refreshHostWidget(ctx as { hasUI: boolean; ui: HostUiBridge });
   });
@@ -113,6 +114,7 @@ export default function widgetHostExtension(pi: ExtensionAPI) {
     registryDispose = undefined;
     stopDemoProviderHeartbeat();
     removeProviderEntry(DEMO_PROVIDER_ID);
+    clearHostPresent();
     uiBridge = undefined;
   });
 

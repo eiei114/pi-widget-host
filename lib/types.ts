@@ -1,24 +1,14 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { REGISTRY_SYMBOL, type ProviderEntry } from "pi-widget-core/protocol";
 
 export const PACKAGE_NAME = "pi-widget-host";
 export const WIDGET_ID = PACKAGE_NAME;
 export const DEMO_PROVIDER_ID = `${PACKAGE_NAME}.demo`;
-export const REGISTRY_SYMBOL = Symbol.for("pi-widget-host.registry.v1");
+export { REGISTRY_SYMBOL, type ProviderEntry };
 
 export type HostTimeBlock = "morning" | "day" | "evening" | "night";
 export type KnownHostTag = "music" | "sports" | "playing-now" | "matchday" | "idle";
-
-export interface ProviderEntry {
-  providerId: string;
-  available: boolean;
-  lines: string[];
-  updatedAt: string;
-  priority?: number;
-  tags?: string[];
-  mode?: string;
-  ttlMs?: number;
-}
 
 export interface BlockPolicy {
   allowedProviderIds?: string[];

@@ -1,12 +1,18 @@
+import { createProviderRuntime, type ProviderRuntime } from "pi-widget-core/provider";
 import { readHostConfig } from "./config.ts";
 import { detectTimeBlock } from "./policy.ts";
-import { publishProviderEntry, removeProviderEntry } from "./registry.ts";
 import { DEMO_PROVIDER_ID, type HostConfig, type ProviderEntry } from "./types.ts";
 
 const HEARTBEAT_MS = 30_000;
 const ENTRY_TTL_MS = 90_000;
 
 let heartbeat: NodeJS.Timeout | undefined;
+let runtime: ProviderRuntime | undefined;
+
+function ensureRuntime(): ProviderRuntime {
+  runtime ??= createProviderRuntime({ providerId: DEMO_PROVIDER_ID });
+  return runtime;
+}
 
 function baseTagsForBlock(block: ReturnType<typeof detectTimeBlock>): string[] {
   switch (block) {
@@ -52,11 +58,10 @@ export function buildDemoProviderEntry(config: HostConfig, now = new Date()): Pr
 async function heartbeatTick(): Promise<void> {
   const config = await readHostConfig();
   if (!config.demoProviderEnabled) {
-    removeProviderEntry(DEMO_PROVIDER_ID);
     stopDemoProviderHeartbeat();
     return;
   }
-  publishProviderEntry(buildDemoProviderEntry(config));
+  ensureRuntime().update(buildDemoProviderEntry(config));
 }
 
 function ensureHeartbeat(): void {
@@ -68,17 +73,19 @@ function ensureHeartbeat(): void {
 
 export async function syncBuiltInDemoProvider(config: HostConfig): Promise<void> {
   if (!config.demoProviderEnabled) {
-    removeProviderEntry(DEMO_PROVIDER_ID);
     stopDemoProviderHeartbeat();
     return;
   }
 
-  publishProviderEntry(buildDemoProviderEntry(config));
+  ensureRuntime().update(buildDemoProviderEntry(config));
   ensureHeartbeat();
 }
 
 export function stopDemoProviderHeartbeat(): void {
-  if (!heartbeat) return;
-  clearInterval(heartbeat);
-  heartbeat = undefined;
+  if (heartbeat) {
+    clearInterval(heartbeat);
+    heartbeat = undefined;
+  }
+  runtime?.stop();
+  runtime = undefined;
 }
