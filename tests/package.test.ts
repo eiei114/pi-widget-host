@@ -21,6 +21,7 @@ test("package metadata points at pi-widget-host", () => {
 test("readme documents host commands", () => {
   assert.match(readme, /\/widget-host:setup/);
   assert.match(readme, /\/widget-host:status/);
+  assert.match(readme, /\/widget-host:policy/);
   assert.match(readme, /\/widget-host:providers/);
   assert.match(readme, /globalThis/);
 });
