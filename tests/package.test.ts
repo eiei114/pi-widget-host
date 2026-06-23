@@ -23,5 +23,8 @@ test("readme documents host commands", () => {
   assert.match(readme, /\/widget-host:status/);
   assert.match(readme, /\/widget-host:policy/);
   assert.match(readme, /\/widget-host:providers/);
+  assert.match(readme, /\/widget-host:mute/);
+  assert.match(readme, /\/widget-host:unmute/);
   assert.match(readme, /globalThis/);
+  assert.match(readme, /ttlMs/);
 });
