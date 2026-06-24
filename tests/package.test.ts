@@ -14,7 +14,7 @@ test("package exports only extension resources", () => {
 
 test("package metadata points at pi-widget-host", () => {
   assert.equal(packageJson.name, "pi-widget-host");
-  assert.equal(packageJson.version, "0.2.0");
+  assert.equal(packageJson.version, "0.3.0");
   assert.match(packageJson.repository.url, /eiei114\/pi-widget-host/);
 });
 
@@ -27,4 +27,9 @@ test("readme documents host commands", () => {
   assert.match(readme, /\/widget-host:unmute/);
   assert.match(readme, /globalThis/);
   assert.match(readme, /ttlMs/);
+  assert.match(readme, /event boost/i);
+  assert.match(readme, /playing-now/);
+  assert.match(readme, /matchday/);
+  assert.match(readme, /Host-only MVP/i);
+  assert.match(readme, /demo provider/i);
 });
