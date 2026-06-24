@@ -29,7 +29,7 @@ test("preset change can switch active provider to silent empty slot", () => {
   assert.equal(focusDay.activeProvider, undefined);
 });
 
-test("event boost can outrank a higher base priority competitor", () => {
+test("playing-now event boost can outrank a higher base priority competitor", () => {
   const config = createDefaultConfig();
   const morning = new Date(2026, 5, 15, 7, 30, 0, 0);
   const freshIso = morning.toISOString();
@@ -44,6 +44,23 @@ test("event boost can outrank a higher base priority competitor", () => {
   );
 
   assert.equal(result.activeProvider?.providerId, "music-provider");
+});
+
+test("matchday event boost can outrank a higher base priority competitor", () => {
+  const config = createDefaultConfig();
+  const day = new Date(2026, 5, 15, 13, 30, 0, 0);
+  const freshIso = day.toISOString();
+
+  const result = evaluateProviderEntries(
+    [
+      baseEntry({ providerId: "sports-provider", priority: 5, tags: ["sports", "matchday"], updatedAt: freshIso }),
+      baseEntry({ providerId: "music-provider", priority: 70, tags: ["music"], updatedAt: freshIso }),
+    ],
+    { ...config, presetId: DEFAULT_PRESET_ID },
+    day,
+  );
+
+  assert.equal(result.activeProvider?.providerId, "sports-provider");
 });
 
 test("mute and stale entries are excluded from selection", () => {

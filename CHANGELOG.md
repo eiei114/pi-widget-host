@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.0] - 2026-06-24
+
+### Added
+
+- Package-readiness hardening for the first publishable Host-only MVP release boundary.
+- Explicit acceptance coverage for `matchday` event boost, known host tags, and silent empty slot behavior.
+
+### Changed
+
+- Minor semver bump marking the completed Host-only MVP: event boost, known tags, registry protocol, and demo-provider dogfooding path.
+
 ## [0.2.0] - 2026-06-15
 
 ### Added
