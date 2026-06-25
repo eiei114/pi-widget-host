@@ -1,6 +1,6 @@
 {
   "name": "pi-widget-host",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Host package for managing one shared Pi widget slot across multiple providers with preset policies and a built-in demo provider.",
   "type": "module",
   "license": "MIT",

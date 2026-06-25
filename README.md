@@ -32,19 +32,31 @@ v1 is a **Host-only MVP**:
 
 ## Install
 
-Published package:
+Install the published npm package with Pi:
 
 ```bash
 pi install npm:pi-widget-host
 ```
 
-GitHub install:
+Install into the current project instead of your user Pi settings:
+
+```bash
+pi install npm:pi-widget-host -l
+```
+
+Or install from GitHub:
 
 ```bash
 pi install git:github.com/eiei114/pi-widget-host
 ```
 
-Local dev:
+Try it without permanently installing:
+
+```bash
+pi -e npm:pi-widget-host
+```
+
+Local development from this repository:
 
 ```bash
 pi -e .
@@ -97,16 +109,20 @@ The built-in demo provider exists to prove the host loop first:
 
 | Path | Purpose |
 |---|---|
-| `extensions/` | Pi extension entrypoint and command registration |
-| `lib/` | config store, registry protocol, policy evaluation, demo provider |
-| `docs/` | supporting docs such as release and protocol notes |
+| `extensions/index.ts` | Pi extension entrypoint and `/widget-host:*` command registration |
+| `lib/` | config store, registry protocol, policy evaluation, and demo provider |
+| `docs/protocol.md` | registry protocol reference for future provider packages |
+| `docs/release.md` | Trusted Publishing release notes |
 
 ## Development
 
 ```bash
 npm install
 npm run ci
+npm run pack:check
 ```
+
+`npm run ci` runs typecheck, tests, and pack validation. `npm run pack:check` runs `npm pack --dry-run` to confirm the shipped tarball contents.
 
 ## Release
 
