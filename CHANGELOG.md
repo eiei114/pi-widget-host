@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.1] - 2026-06-25
+
+### Changed
+
+- README install and development guidance now matches the current Pi OSS template baseline, including project-local install, `pi -e npm:pi-widget-host`, and `npm run pack:check` (`npm pack --dry-run`) validation in the public docs flow.
+- `Package contents` now lists the actual shipped paths instead of unused template resource directories.
+
 ## [0.3.0] - 2026-06-24
 
 ### Added
