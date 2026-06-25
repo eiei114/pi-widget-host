@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.2] - 2026-06-26
+
+### Fixed
+
+- npm Trusted Publishing publish retry after registry configuration fix (no functional changes from 0.3.1).
+
 ## [0.3.1] - 2026-06-25
 
 ### Changed

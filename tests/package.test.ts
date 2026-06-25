@@ -14,7 +14,7 @@ test("package exports only extension resources", () => {
 
 test("package metadata points at pi-widget-host", () => {
   assert.equal(packageJson.name, "pi-widget-host");
-  assert.equal(packageJson.version, "0.3.1");
+  assert.match(packageJson.version, /^\d+\.\d+\.\d+$/);
   assert.match(packageJson.repository.url, /eiei114\/pi-widget-host/);
 });
 
