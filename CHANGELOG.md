@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
+
 All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
@@ -42,3 +46,4 @@ This project follows semantic versioning.
 ### Changed
 
 - Replaced template placeholders and removed template-only skill, prompt, and theme resources.
+
