@@ -142,7 +142,7 @@ Stop the silent surprise.
 One-click discovery.
 
 - **Acceptance**
-  - A new `docs/README.md` links `protocol.md`, `release.md`, this `ROADMAP.md`, and any docs added by other seeds.
+  - A new `docs/README.md` links `protocol.md`, `release.md`, `../ROADMAP.md`, and any docs added by other seeds.
   - `README.md` "Package contents" or "Links" references `docs/README.md`.
   - `npm run ci` is green.
 
