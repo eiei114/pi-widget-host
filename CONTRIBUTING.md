@@ -28,7 +28,11 @@ Before opening a PR:
 
 Releases use npm Trusted Publishing. Do not add `NPM_TOKEN` to GitHub Secrets.
 
+On `main`, `.github/workflows/auto-release.yml` creates the `v<version>` tag and GitHub Release after a `package.json` version bump, then dispatches `.github/workflows/publish.yml`.
+
 ```bash
 npm version patch
-git push --follow-tags
+git push
 ```
+
+See [`docs/release.md`](docs/release.md) for the full Trusted Publishing workflow.
