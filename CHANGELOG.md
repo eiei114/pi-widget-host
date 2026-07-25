@@ -1,16 +1,25 @@
 # Changelog
 
-## Unreleased
-
-### Changed
-
-- Bump package version to `0.3.4` for the next patch release.
-
-- Add Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
-
 All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
+
+## [0.3.4] - 2026-07-21
+
+### Added
+
+- `ROADMAP.md` maintenance context for weekly portfolio seeds and bounded micro-tasks.
+
+### Changed
+
+- CONTRIBUTING release instructions now match the auto-release and publish workflow (no `follow-tags`).
+- Dependency updates for `pi-widget-core` and development tooling.
+
+## [0.3.3] - 2026-07-04
+
+### Added
+
+- Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
 
 ## [0.3.2] - 2026-06-26
 

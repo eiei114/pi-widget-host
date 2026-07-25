@@ -6,6 +6,7 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.url), "utf8");
 const releaseDoc = await readFile(new URL("../docs/release.md", import.meta.url), "utf8");
+const changelog = await readFile(new URL("../CHANGELOG.md", import.meta.url), "utf8");
 
 test("package exports only extension resources", () => {
   assert.deepEqual(packageJson.pi.extensions, ["./extensions/index.ts"]);
@@ -18,6 +19,17 @@ test("package metadata points at pi-widget-host", () => {
   assert.equal(packageJson.name, "pi-widget-host");
   assert.match(packageJson.version, /^\d+\.\d+\.\d+$/);
   assert.match(packageJson.repository.url, /eiei114\/pi-widget-host/);
+});
+
+test("changelog documents the current package version", () => {
+  const escapedVersion = packageJson.version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const versionSection = new RegExp(`## \\[${escapedVersion}\\]`);
+  assert.match(changelog, versionSection);
+
+  const unreleasedMatch = changelog.match(/## Unreleased\s*\n([\s\S]*?)(?=\n## |$)/);
+  if (unreleasedMatch) {
+    assert.match(unreleasedMatch[1] ?? "", /^\s*$/);
+  }
 });
 
 test("contributing release instructions match trusted publishing workflow", () => {
