@@ -22,9 +22,14 @@ test("package metadata points at pi-widget-host", () => {
 });
 
 test("changelog documents the current package version", () => {
-  const versionSection = new RegExp(`## \\[${packageJson.version}\\]`);
+  const escapedVersion = packageJson.version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const versionSection = new RegExp(`## \\[${escapedVersion}\\]`);
   assert.match(changelog, versionSection);
-  assert.doesNotMatch(changelog, /## Unreleased\s+\n\s*###/);
+
+  const unreleasedMatch = changelog.match(/## Unreleased\s*\n([\s\S]*?)(?=\n## |$)/);
+  if (unreleasedMatch) {
+    assert.match(unreleasedMatch[1] ?? "", /^\s*$/);
+  }
 });
 
 test("contributing release instructions match trusted publishing workflow", () => {
