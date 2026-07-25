@@ -13,10 +13,10 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 | Item | Value |
 |---|---|
 | Package | `pi-widget-host` |
-| Published version (npm `latest`) | `0.3.3` |
-| `package.json` version | `0.3.3` |
-| Latest GitHub release | [`v0.3.3`](https://github.com/eiei114/pi-widget-host/releases/tag/v0.3.3) — 2026-07-04 |
-| Runtime dependency | `pi-widget-core` `^0.1.0` (npm latest `0.1.2`) |
+| Published version (npm `latest`) | `0.3.4` |
+| `package.json` version | `0.3.4` |
+| Latest GitHub release | [`v0.3.4`](https://github.com/eiei114/pi-widget-host/releases/tag/v0.3.4) — 2026-07-20 |
+| Runtime dependency | `pi-widget-core` `^0.1.0` (npm latest `0.1.3`) |
 | Release mechanism | npm Trusted Publishing via `.github/workflows/auto-release.yml` + `publish.yml` |
 
 ### Release line so far
@@ -28,6 +28,7 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 | `0.3.1` | 2026-06-25 | README / package-contents alignment with Pi OSS template baseline. |
 | `0.3.2` | 2026-06-26 | npm Trusted Publishing publish retry (no functional change). |
 | `0.3.3` | 2026-07-04 | Sponsor button + native GitHub funding link. |
+| `0.3.4` | 2026-07-20 | ROADMAP maintenance context, CONTRIBUTING/release doc alignment, dependency updates. |
 
 ### Milestone state
 
@@ -50,13 +51,13 @@ Non-goals for this cycle: a v2 registry protocol, a UI settings screen, automate
 
 ## 3. Short-term maintenance goals (next 2–3 releases)
 
-### `0.3.4` (patch) — dependency & docs hygiene
+### `0.3.4` (patch) — dependency & docs hygiene — shipped
 
 Goal: clear the pending dependency backlog and get the docs to a clean baseline.
 
-- Land the open Dependabot bumps (`pi-widget-core` → `0.1.2`, dev-deps group) behind a green `npm run ci`.
-- Sync `CHANGELOG.md` with the already-shipped `0.3.3` (sponsor entry is still under `## Unreleased`).
-- Add a provider-protocol example and a docs index so the registry story is discoverable.
+- [x] Sync `CHANGELOG.md` with shipped `0.3.3` and `0.3.4` release sections.
+- [ ] Land the open Dependabot bumps (`pi-widget-core` → `0.1.3`, dev-deps group) behind a green `npm run ci`.
+- [ ] Add a provider-protocol example and a docs index so the registry story is discoverable.
 
 ### `0.4.0` (minor) — first provider-package pilot
 
@@ -74,8 +75,7 @@ Goal: broaden the policy surface once the foundations are proven — additional 
 
 Each item is a candidate 30–90 minute micro-seed (see §5).
 
-- **CHANGELOG is out of sync.** `0.3.3` shipped the sponsor button, but `CHANGELOG.md` still lists it under `## Unreleased` and has no `## [0.3.3]` section.
-- **`pi-widget-core` floor is behind.** `package.json` pins `^0.1.0` while npm latest is `0.1.2` (Dependabot PR #19 open).
+- **`pi-widget-core` floor is behind.** `package.json` pins `^0.1.0` while npm latest is `0.1.3` (Dependabot PR open).
 - **Extension lifecycle is under-tested.** `tests/extension.test.ts` only asserts command registration. The `refreshHostWidget` stale-TTL reschedule timer and the registry `subscribe` re-render path have no direct coverage.
 - **No provider example.** `docs/protocol.md` specifies the registry shape but there is no minimal third-party provider snippet for new authors to copy.
 - **No config schema/migration story.** `HostConfig.schemaVersion` is pinned to `1` with normalization in `lib/config.ts`, but the field contract, defaults, and forward-migration expectation are undocumented.
@@ -89,16 +89,6 @@ Each item is a candidate 30–90 minute micro-seed (see §5).
 Each seed is intentionally bounded to **30–90 minutes** and ships behind a green `npm run ci`. Pick one per maintenance window. Seeds are candidates, not commitments — promote a seed to a tracked issue when you start it.
 
 > How to run the gate locally: `npm install && npm run ci` (typecheck + tests + `npm pack --dry-run`).
-
-### Seed 1 — Sync CHANGELOG with shipped `0.3.3`  ·  ~30 min
-
-Promote the sponsor entry out of `## Unreleased` into a real release section.
-
-- **Acceptance**
-  - `CHANGELOG.md` has a `## [0.3.3] - 2026-07-04` section under `### Added` describing the Buy Me a Coffee button + `.github/FUNDING.yml` link.
-  - `## Unreleased` is empty (placeholder line only) or removed until the next real change.
-  - The `0.3.3` date matches `gh release view v0.3.3 --json publishedAt`.
-  - `npm run ci` is green; no `package.json` version change (already `0.3.3`).
 
 ### Seed 2 — Add a minimal provider example  ·  ~60–90 min
 
