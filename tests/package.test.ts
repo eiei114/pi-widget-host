@@ -35,9 +35,9 @@ test("changelog documents the current package version", () => {
 
 test("roadmap reflects the current package version", () => {
   const escapedVersion = packageJson.version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  assert.match(roadmap, new RegExp(`Published version \(npm \`latest\`\) \| \`${escapedVersion}\``));
-  assert.match(roadmap, new RegExp(`\`package\.json\` version \| \`${escapedVersion}\``));
-  assert.match(roadmap, new RegExp(`\[\`v${escapedVersion}\`\]`));
+  assert.match(roadmap, new RegExp(`Published version \\(npm \`latest\`\\) \\| \`${escapedVersion}\``));
+  assert.match(roadmap, new RegExp(`\`package\.json\` version \\| \`${escapedVersion}\``));
+  assert.match(roadmap, new RegExp(`\\[\`v${escapedVersion}\`\\]`));
 });
 
 test("contributing release instructions match trusted publishing workflow", () => {
