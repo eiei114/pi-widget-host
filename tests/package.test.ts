@@ -7,6 +7,7 @@ const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.url), "utf8");
 const releaseDoc = await readFile(new URL("../docs/release.md", import.meta.url), "utf8");
 const changelog = await readFile(new URL("../CHANGELOG.md", import.meta.url), "utf8");
+const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
 
 test("package exports only extension resources", () => {
   assert.deepEqual(packageJson.pi.extensions, ["./extensions/index.ts"]);
@@ -30,6 +31,13 @@ test("changelog documents the current package version", () => {
   if (unreleasedMatch) {
     assert.match(unreleasedMatch[1] ?? "", /^\s*$/);
   }
+});
+
+test("roadmap reflects the current package version", () => {
+  const escapedVersion = packageJson.version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(roadmap, new RegExp(`Published version \\(npm \`latest\`\\) \\| \`${escapedVersion}\``));
+  assert.match(roadmap, new RegExp(`\`package\.json\` version \\| \`${escapedVersion}\``));
+  assert.match(roadmap, new RegExp(`\\[\`v${escapedVersion}\`\\]`));
 });
 
 test("contributing release instructions match trusted publishing workflow", () => {
