@@ -5,18 +5,22 @@ Provider packages can publish widget lines without importing `pi-widget-host`. T
 ```ts
 const registrySymbol = Symbol.for("pi-widget-host.registry.v1");
 
-const registry = globalThis[registrySymbol] as
-  | {
-      set(entry: {
-        providerId: string;
-        available: boolean;
-        lines: string[];
-        updatedAt: string;
-        priority?: number;
-        tags?: string[];
-      }): void;
-    }
-  | undefined;
+type ProviderEntry = {
+  providerId: string;
+  available: boolean;
+  lines: string[];
+  updatedAt: string;
+  priority?: number;
+  tags?: string[];
+  mode?: string;
+  ttlMs?: number;
+};
+
+type WidgetHostRegistry = {
+  set(entry: ProviderEntry): void;
+};
+
+const registry = Reflect.get(globalThis, registrySymbol) as WidgetHostRegistry | undefined;
 
 registry?.set({
   providerId: "example.now-playing",
