@@ -95,7 +95,7 @@ Future provider packages can publish to the host without importing this package 
 - required fields: `providerId`, `available`, `lines`, `updatedAt`
 - optional fields: `priority`, `tags`, `mode`, `ttlMs`
 
-See [`docs/protocol.md`](docs/protocol.md).
+See [`docs/protocol.md`](docs/protocol.md) and the copy-paste [`minimal provider example`](docs/provider-example.md).
 
 ## Built-in demo provider
 
