@@ -38,6 +38,8 @@ test("roadmap reflects the current package version", () => {
   assert.match(roadmap, new RegExp(`Published version \\(npm \`latest\`\\) \\| \`${escapedVersion}\``));
   assert.match(roadmap, new RegExp(`\`package\.json\` version \\| \`${escapedVersion}\``));
   assert.match(roadmap, new RegExp(`\\[\`v${escapedVersion}\`\\]`));
+  assert.doesNotMatch(roadmap, /No provider example/i);
+  assert.match(roadmap, /docs\/provider-example\.md/);
 });
 
 test("contributing release instructions match trusted publishing workflow", () => {
@@ -63,4 +65,5 @@ test("readme documents host commands", () => {
   assert.match(readme, /matchday/);
   assert.match(readme, /Host-only MVP/i);
   assert.match(readme, /demo provider/i);
+  assert.match(readme, /docs\/provider-example\.md/);
 });
