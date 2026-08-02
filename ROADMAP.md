@@ -56,8 +56,9 @@ Non-goals for this cycle: a v2 registry protocol, a UI settings screen, automate
 Goal: clear the pending dependency backlog and get the docs to a clean baseline.
 
 - [x] Sync `CHANGELOG.md` with shipped `0.3.3` and `0.3.4` release sections.
+- [x] Add a provider-protocol example (`docs/provider-example.md`) linked from `README.md`.
 - [ ] Land the open Dependabot bumps (`pi-widget-core` → `0.1.3`, dev-deps group) behind a green `npm run ci`.
-- [ ] Add a provider-protocol example and a docs index so the registry story is discoverable.
+- [ ] Add a docs index so the registry story is discoverable.
 
 ### `0.4.0` (minor) — first provider-package pilot
 
@@ -77,7 +78,6 @@ Each item is a candidate 30–90 minute micro-seed (see §5).
 
 - **`pi-widget-core` floor is behind.** `package.json` pins `^0.1.0` while npm latest is `0.1.3` (Dependabot PR open).
 - **Extension lifecycle is under-tested.** `tests/extension.test.ts` only asserts command registration. The `refreshHostWidget` stale-TTL reschedule timer and the registry `subscribe` re-render path have no direct coverage.
-- **No provider example.** `docs/protocol.md` specifies the registry shape but there is no minimal third-party provider snippet for new authors to copy.
 - **No config schema/migration story.** `HostConfig.schemaVersion` is pinned to `1` with normalization in `lib/config.ts`, but the field contract, defaults, and forward-migration expectation are undocumented.
 - **No lint/format policy.** No ESLint / Prettier / Biome config; `npm run ci` runs `tsc` + `node:test` + `npm pack --dry-run` only. The choice is fine, but it is currently implicit.
 - **Time blocks are local-TZ only.** `detectTimeBlock` reads the host's local hour with no timezone override; this limitation is undocumented.
@@ -89,16 +89,6 @@ Each item is a candidate 30–90 minute micro-seed (see §5).
 Each seed is intentionally bounded to **30–90 minutes** and ships behind a green `npm run ci`. Pick one per maintenance window. Seeds are candidates, not commitments — promote a seed to a tracked issue when you start it.
 
 > How to run the gate locally: `npm install && npm run ci` (typecheck + tests + `npm pack --dry-run`).
-
-### Seed 2 — Add a minimal provider example  ·  ~60–90 min
-
-Give provider authors a copy-paste starting point.
-
-- **Acceptance**
-  - A new `docs/provider-example.md` (or `examples/` snippet) shows a ~15-line provider publishing through the registry using `Symbol.for("pi-widget-host.registry.v1")`.
-  - It demonstrates the required fields (`providerId`, `available`, `lines`, `updatedAt`) and at least one optional field (`priority` or `tags`).
-  - `README.md` "Registry protocol" section links to it.
-  - `npm run ci` is green.
 
 ### Seed 3 — Document the config schema & normalization contract  ·  ~60 min
 
