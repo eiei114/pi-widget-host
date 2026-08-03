@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.5] - 2026-08-04
+
+### Changed
+
+- Bump package version for the Discord release webhook verification.
+
 ## [0.3.4] - 2026-07-21
 
 ### Added
