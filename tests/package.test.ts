@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+const packageLock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
 const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.url), "utf8");
 const releaseDoc = await readFile(new URL("../docs/release.md", import.meta.url), "utf8");
@@ -14,6 +15,14 @@ test("package exports only extension resources", () => {
   assert.equal(packageJson.pi.skills, undefined);
   assert.equal(packageJson.pi.prompts, undefined);
   assert.equal(packageJson.pi.themes, undefined);
+});
+
+test("production dependency floors match lockfile resolutions", () => {
+  for (const [name, range] of Object.entries(packageJson.dependencies ?? {})) {
+    const resolved = packageLock.packages[`node_modules/${name}`]?.version;
+    assert.ok(resolved, `missing lockfile resolution for ${name}`);
+    assert.equal(range, `^${resolved}`, `${name} floor should match the resolved lockfile version`);
+  }
 });
 
 test("package metadata points at pi-widget-host", () => {

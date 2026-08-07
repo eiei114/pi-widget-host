@@ -15,8 +15,8 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 | Package | `pi-widget-host` |
 | Published version (npm `latest`) | `0.3.5` |
 | `package.json` version | `0.3.5` |
-| Latest GitHub release | [`v0.3.5`](https://github.com/eiei114/pi-widget-host/releases/tag/v0.3.5) — 2026-07-20 |
-| Runtime dependency | `pi-widget-core` `^0.1.0` (npm latest `0.1.3`) |
+| Latest GitHub release | [`v0.3.5`](https://github.com/eiei114/pi-widget-host/releases/tag/v0.3.5) — 2026-08-04 |
+| Runtime dependency | `pi-widget-core` `^0.1.3` (npm latest `0.1.3`) |
 | Release mechanism | npm Trusted Publishing via `.github/workflows/auto-release.yml` + `publish.yml` |
 
 ### Release line so far
@@ -29,6 +29,7 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 | `0.3.2` | 2026-06-26 | npm Trusted Publishing publish retry (no functional change). |
 | `0.3.3` | 2026-07-04 | Sponsor button + native GitHub funding link. |
 | `0.3.4` | 2026-07-20 | ROADMAP maintenance context, CONTRIBUTING/release doc alignment, dependency updates. |
+| `0.3.5` | 2026-08-04 | Discord community badge and release webhook verification. |
 
 ### Milestone state
 
@@ -57,7 +58,7 @@ Goal: clear the pending dependency backlog and get the docs to a clean baseline.
 
 - [x] Sync `CHANGELOG.md` with shipped `0.3.3` and `0.3.4` release sections.
 - [x] Add a provider-protocol example (`docs/provider-example.md`) linked from `README.md`.
-- [ ] Land the open Dependabot bumps (`pi-widget-core` → `0.1.3`, dev-deps group) behind a green `npm run ci`.
+- [x] Land the open Dependabot bumps (`pi-widget-core` → `0.1.3`, dev-deps group) behind a green `npm run ci`.
 - [ ] Add a docs index so the registry story is discoverable.
 
 ### `0.4.0` (minor) — first provider-package pilot
@@ -76,7 +77,6 @@ Goal: broaden the policy surface once the foundations are proven — additional 
 
 Each item is a candidate 30–90 minute micro-seed (see §5).
 
-- **`pi-widget-core` floor is behind.** `package.json` pins `^0.1.0` while npm latest is `0.1.3` (Dependabot PR open).
 - **Extension lifecycle is under-tested.** `tests/extension.test.ts` only asserts command registration. The `refreshHostWidget` stale-TTL reschedule timer and the registry `subscribe` re-render path have no direct coverage.
 - **No config schema/migration story.** `HostConfig.schemaVersion` is pinned to `1` with normalization in `lib/config.ts`, but the field contract, defaults, and forward-migration expectation are undocumented.
 - **No lint/format policy.** No ESLint / Prettier / Biome config; `npm run ci` runs `tsc` + `node:test` + `npm pack --dry-run` only. The choice is fine, but it is currently implicit.
