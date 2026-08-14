@@ -62,11 +62,14 @@ test("contributing release instructions match trusted publishing workflow", () =
 });
 
 test("docs index links the registry and maintenance docs", () => {
-  assert.match(docsIndex, /protocol\.md/);
-  assert.match(docsIndex, /provider-example\.md/);
-  assert.match(docsIndex, /release\.md/);
-  assert.match(docsIndex, /\.\.\/ROADMAP\.md/);
-  assert.match(readme, /docs\/README\.md/);
+  assert.match(docsIndex, /\]\(protocol\.md\)/);
+  assert.match(docsIndex, /\]\(provider-example\.md\)/);
+  assert.match(docsIndex, /\]\(release\.md\)/);
+  assert.match(
+    docsIndex,
+    /\]\(https:\/\/github\.com\/eiei114\/pi-widget-host\/blob\/main\/ROADMAP\.md\)/,
+  );
+  assert.match(readme, /\| `docs\/README\.md` \|/);
 });
 
 test("readme documents host commands", () => {

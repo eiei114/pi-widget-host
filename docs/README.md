@@ -14,11 +14,11 @@ Entry point for `pi-widget-host` maintainer and provider-author docs.
 
 | Doc | Purpose |
 |---|---|
-| [`../ROADMAP.md`](../ROADMAP.md) | Living release status, priorities, and bounded maintenance seeds. |
+| [ROADMAP.md](https://github.com/eiei114/pi-widget-host/blob/main/ROADMAP.md) | Living release status, priorities, and bounded maintenance seeds. |
 | [`npm-publish-run-2026-07-04.md`](npm-publish-run-2026-07-04.md) | Notes from the 2026-07-04 publish run (historical reference). |
 
 ## Quick links
 
 - Package README: [`../README.md`](../README.md)
-- Contributing: [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
+- Contributing: [CONTRIBUTING.md](https://github.com/eiei114/pi-widget-host/blob/main/CONTRIBUTING.md)
 - Changelog: [`../CHANGELOG.md`](../CHANGELOG.md)
