@@ -59,7 +59,7 @@ Goal: clear the pending dependency backlog and get the docs to a clean baseline.
 - [x] Sync `CHANGELOG.md` with shipped `0.3.3` and `0.3.4` release sections.
 - [x] Add a provider-protocol example (`docs/provider-example.md`) linked from `README.md`.
 - [x] Land the open Dependabot bumps (`pi-widget-core` → `0.1.3`, dev-deps group) behind a green `npm run ci`.
-- [ ] Add a docs index so the registry story is discoverable.
+- [x] Add a docs index so the registry story is discoverable.
 
 ### `0.4.0` (minor) — first provider-package pilot
 

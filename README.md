@@ -114,6 +114,7 @@ The built-in demo provider exists to prove the host loop first:
 |---|---|
 | `extensions/index.ts` | Pi extension entrypoint and `/widget-host:*` command registration |
 | `lib/` | config store, registry protocol, policy evaluation, and demo provider |
+| `docs/README.md` | documentation index for protocol, release, and maintenance docs |
 | `docs/protocol.md` | registry protocol reference for future provider packages |
 | `docs/provider-example.md` | minimal copy-paste provider publishing through the registry |
 | `docs/release.md` | Trusted Publishing release notes |

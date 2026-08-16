@@ -9,6 +9,7 @@ const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.ur
 const releaseDoc = await readFile(new URL("../docs/release.md", import.meta.url), "utf8");
 const changelog = await readFile(new URL("../CHANGELOG.md", import.meta.url), "utf8");
 const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
+const docsIndex = await readFile(new URL("../docs/README.md", import.meta.url), "utf8");
 
 test("package exports only extension resources", () => {
   assert.deepEqual(packageJson.pi.extensions, ["./extensions/index.ts"]);
@@ -58,6 +59,17 @@ test("contributing release instructions match trusted publishing workflow", () =
   assert.match(releaseDoc, /auto-release\.yml/);
   assert.match(releaseDoc, /publish\.yml/);
   assert.doesNotMatch(releaseDoc, /follow-tags/);
+});
+
+test("docs index links the registry and maintenance docs", () => {
+  assert.match(docsIndex, /\]\(protocol\.md\)/);
+  assert.match(docsIndex, /\]\(provider-example\.md\)/);
+  assert.match(docsIndex, /\]\(release\.md\)/);
+  assert.match(
+    docsIndex,
+    /\]\(https:\/\/github\.com\/eiei114\/pi-widget-host\/blob\/main\/ROADMAP\.md\)/,
+  );
+  assert.match(readme, /\| `docs\/README\.md` \|/);
 });
 
 test("readme documents host commands", () => {
