@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -42,6 +42,31 @@ test("config path defaults to user-global ~/.pi/agent", () => {
   } finally {
     if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
     else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+  }
+});
+
+test("readHostConfig normalizes malformed payloads to the default config shape", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const configPath = resolveConfigPath();
+
+    await writeFile(configPath, JSON.stringify("not-an-object"), "utf8");
+    assert.deepEqual(await readHostConfig(), createDefaultConfig());
+
+    await writeFile(configPath, JSON.stringify({ presetId: "bogus-preset" }), "utf8");
+    assert.deepEqual(await readHostConfig(), createDefaultConfig());
+
+    await writeFile(configPath, JSON.stringify({ mutedProviderIds: "alpha" }), "utf8");
+    assert.deepEqual(await readHostConfig(), createDefaultConfig());
+
+    await writeFile(configPath, "not-json", "utf8");
+    assert.deepEqual(await readHostConfig(), createDefaultConfig());
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
