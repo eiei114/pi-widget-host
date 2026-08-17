@@ -20,8 +20,8 @@ All fields are required on the normalized object. Unknown keys in stored JSON ar
 | `schemaVersion` | `1` (literal) | `1` | Always rewritten to `1`. Any stored value is replaced. |
 | `setupComplete` | `boolean` | `false` | `true` only when the input value is strictly `true`; every other value becomes `false`. |
 | `demoProviderEnabled` | `boolean` | `false` | `true` only when the input value is strictly `true`; every other value becomes `false`. |
-| `presetId` | `string` | `"always-demo"` | When the input is a string that matches a built-in preset id, that id is kept. Otherwise `getPreset()` falls back to the default preset (`"always-demo"`). |
-| `mutedProviderIds` | `string[]` | `[]` | When the input is an array, non-empty trimmed strings are kept, duplicates removed, order preserved. Any non-array input becomes `[]`. |
+| `presetId` | `string` | `"always-demo"` | Valid built-in preset ids are preserved. Invalid ids, non-string values, and strings that do not exactly match a built-in id (including whitespace-wrapped values such as `" focus-day "`) normalize to `"always-demo"`. |
+| `mutedProviderIds` | `string[]` | `[]` | When the input is an array, string elements with non-blank content (checked via `trim()`) are kept as written, including surrounding whitespace; duplicates removed, order preserved. Any non-array input becomes `[]`. |
 
 Built-in preset ids (from `lib/policy.ts`):
 
@@ -91,7 +91,9 @@ Normalizes to:
 | Stored value | Normalized result |
 |---|---|
 | `"presetId": "not-a-real-preset"` | `"presetId": "always-demo"` |
+| `"presetId": " focus-day "` | `"presetId": "always-demo"` |
 | `"mutedProviderIds": "alpha"` | `"mutedProviderIds": []` |
+| `"mutedProviderIds": [" alpha "]` | `"mutedProviderIds": [" alpha "]` |
 | `"mutedProviderIds": ["ok", 42, "", "  ", "ok"]` | `"mutedProviderIds": ["ok"]` |
 | `"setupComplete": "yes"` | `"setupComplete": false` |
 | `"demoProviderEnabled": 1` | `"demoProviderEnabled": false` |
