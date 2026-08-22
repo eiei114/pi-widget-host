@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.6] - 2026-08-22
+
+### Changed
+
+- Merge the 2026-08-22 managed OSS dependency and maintenance PR batch.
+
 ## [0.3.5] - 2026-08-04
 
 ### Changed
@@ -65,4 +71,3 @@ This project follows semantic versioning.
 ### Changed
 
 - Replaced template placeholders and removed template-only skill, prompt, and theme resources.
-
