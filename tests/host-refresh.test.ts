@@ -56,9 +56,9 @@ async function waitForWidgetRefresh(
   previousCallCount: number,
   timeoutMs = 1_000,
 ): Promise<void> {
-  const started = Date.now();
+  const started = performance.now();
   while (ui.setWidgetCalls.length <= previousCallCount) {
-    if (Date.now() - started > timeoutMs) {
+    if (performance.now() - started > timeoutMs) {
       assert.fail("timed out waiting for refreshHostWidget to update the widget");
     }
     await new Promise<void>((resolve) => setImmediate(resolve));
@@ -135,14 +135,21 @@ test("refreshHostWidget schedules stale-TTL re-evaluation with fake timers", asy
   });
 });
 
-test("ensureRegistryWatcher registers a registry refresh listener", () => {
+test("ensureRegistryWatcher registers a registry refresh listener", (t) => {
   resetHostExtensionStateForTests();
   try {
+    const registry = getWidgetHostRegistry();
+    const originalSubscribe = registry.subscribe;
+    const subscribeSpy = t.mock.method(registry, "subscribe", (listener: () => void) =>
+      originalSubscribe(listener),
+    );
+
     assert.equal(isRegistryWatcherActiveForTests(), false);
     ensureRegistryWatcher();
     assert.equal(isRegistryWatcherActiveForTests(), true);
     ensureRegistryWatcher();
     assert.equal(isRegistryWatcherActiveForTests(), true);
+    assert.equal(subscribeSpy.mock.callCount(), 1, "ensureRegistryWatcher must not double-subscribe");
   } finally {
     resetHostExtensionStateForTests();
     assert.equal(isRegistryWatcherActiveForTests(), false);
