@@ -258,3 +258,17 @@ export default function widgetHostExtension(pi: ExtensionAPI) {
     },
   });
 }
+
+export function resetHostExtensionStateForTests(): void {
+  clearStaleTimer();
+  registryDispose?.();
+  registryDispose = undefined;
+  stopDemoProviderHeartbeat();
+  uiBridge = undefined;
+}
+
+export function isRegistryWatcherActiveForTests(): boolean {
+  return registryDispose !== undefined;
+}
+
+export { ensureRegistryWatcher, refreshHostWidget };
