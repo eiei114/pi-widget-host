@@ -2,6 +2,7 @@ import { type HostConfig, type HostTimeBlock, type KnownHostTag, type PolicyEval
 
 export const DEFAULT_PRESET_ID = "always-demo";
 export const KNOWN_HOST_TAGS: readonly KnownHostTag[] = ["music", "sports", "playing-now", "matchday", "idle"] as const;
+const KNOWN_HOST_TAG_SET = new Set<string>(KNOWN_HOST_TAGS);
 
 export const PRESET_OPTIONS: readonly PolicyPreset[] = [
   {
@@ -39,8 +40,10 @@ export const PRESET_OPTIONS: readonly PolicyPreset[] = [
   },
 ];
 
+const PRESET_BY_ID = new Map(PRESET_OPTIONS.map((preset) => [preset.id, preset]));
+
 export function getPreset(id: string | undefined): PolicyPreset {
-  return PRESET_OPTIONS.find((preset) => preset.id === id) ?? PRESET_OPTIONS[0]!;
+  return PRESET_BY_ID.get(id ?? DEFAULT_PRESET_ID) ?? PRESET_OPTIONS[0]!;
 }
 
 export function detectTimeBlock(now = new Date()): HostTimeBlock {
@@ -63,29 +66,32 @@ export function isEntryStale(entry: Pick<ProviderEntry, "updatedAt" | "ttlMs">, 
   return typeof remaining === "number" ? remaining <= 0 : false;
 }
 
-function tagScore(knownTags: KnownHostTag[], preferredTags: readonly KnownHostTag[] | undefined): number {
+function tagScore(knownTags: ReadonlySet<KnownHostTag>, preferredTags: readonly KnownHostTag[] | undefined): number {
   if (!preferredTags || preferredTags.length === 0) return 0;
-  const scores = preferredTags
-    .map((tag, index) => (knownTags.includes(tag) ? Math.max(40 - index * 10, 10) : 0))
-    .filter((value) => value > 0);
-  return scores.length > 0 ? Math.max(...scores) : 0;
+  let best = 0;
+  for (let index = 0; index < preferredTags.length; index++) {
+    const tag = preferredTags[index]!;
+    if (!knownTags.has(tag)) continue;
+    best = Math.max(best, Math.max(40 - index * 10, 10));
+  }
+  return best;
 }
 
-function eventBoost(knownTags: KnownHostTag[]): number {
+function eventBoost(knownTags: ReadonlySet<KnownHostTag>): number {
   let boost = 0;
-  if (knownTags.includes("playing-now")) boost += 100;
-  if (knownTags.includes("matchday")) boost += 80;
+  if (knownTags.has("playing-now")) boost += 100;
+  if (knownTags.has("matchday")) boost += 80;
   return boost;
 }
 
-function normalizeKnownTags(tags: string[] | undefined): KnownHostTag[] {
+function normalizeKnownTags(tags: string[] | undefined): Set<KnownHostTag> {
   const known = new Set<KnownHostTag>();
   for (const tag of tags ?? []) {
-    if ((KNOWN_HOST_TAGS as readonly string[]).includes(tag)) {
+    if (KNOWN_HOST_TAG_SET.has(tag)) {
       known.add(tag as KnownHostTag);
     }
   }
-  return [...known];
+  return known;
 }
 
 export function describePreset(preset: PolicyPreset): string {
@@ -103,13 +109,16 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
   const preset = getPreset(config.presetId);
   const timeBlock = detectTimeBlock(now);
   const blockPolicy = preset.blocks[timeBlock];
+  const mutedProviderIds = new Set(config.mutedProviderIds);
+  const allowedProviderIds =
+    blockPolicy.allowedProviderIds === undefined ? undefined : new Set(blockPolicy.allowedProviderIds);
 
   const providerStates = entries.map<ProviderState>((entry) => {
-    const knownTags = normalizeKnownTags(entry.tags);
-    const isMuted = config.mutedProviderIds.includes(entry.providerId);
+    const knownTagSet = normalizeKnownTags(entry.tags);
+    const isMuted = mutedProviderIds.has(entry.providerId);
     const isStale = isEntryStale(entry, now);
     const hasLines = Array.isArray(entry.lines) && entry.lines.length > 0;
-    const isAllowed = blockPolicy.allowedProviderIds === undefined || blockPolicy.allowedProviderIds.includes(entry.providerId);
+    const isAllowed = allowedProviderIds === undefined || allowedProviderIds.has(entry.providerId);
     const reasons: string[] = [];
 
     if (!entry.available) reasons.push("provider reported unavailable");
@@ -118,7 +127,7 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
     if (isMuted) reasons.push("muted in host config");
     if (isStale) reasons.push("stale ttl");
 
-    const effectivePriority = (entry.priority ?? 0) + tagScore(knownTags, blockPolicy.preferredTags) + eventBoost(knownTags);
+    const effectivePriority = (entry.priority ?? 0) + tagScore(knownTagSet, blockPolicy.preferredTags) + eventBoost(knownTagSet);
 
     let effectiveStatus: ProviderState["effectiveStatus"] = "eligible";
     if (isMuted) {
@@ -133,7 +142,7 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
       ...entry,
       effectivePriority,
       effectiveStatus,
-      knownTags,
+      knownTags: [...knownTagSet],
       reasons,
       isMuted,
       isStale,
