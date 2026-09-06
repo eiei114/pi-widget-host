@@ -8,8 +8,14 @@ const PROVIDER_COUNT = 200;
 const MUTED_COUNT = 20;
 const WARMUP_ITERATIONS = 500;
 const MEASURED_ITERATIONS = 5_000;
-/** Pre-optimization baseline (2026-W36): ~80.5 µs/call. Post Set lookup: ~68 µs/call. */
-const MAX_MICROSECONDS_PER_CALL = 95;
+/**
+ * Pre-optimization baseline (2026-W36, dev machine): ~80.5 µs/call.
+ * Post Set lookup (dev machine): ~68 µs/call.
+ * CI (ubuntu-latest shared runner) observed ~134.6 µs/call for the same code,
+ * so the budget is calibrated with headroom for shared-runner variance while
+ * still rejecting pre-optimization-level regressions on CI hardware.
+ */
+const MAX_MICROSECONDS_PER_CALL = 150;
 
 function buildStressEntries(now: Date): ProviderEntry[] {
   const tags = ["music", "sports", "playing-now", "matchday", "idle", "unknown"] as const;
