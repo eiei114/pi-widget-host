@@ -99,6 +99,8 @@ Future provider packages can publish to the host without importing this package 
 
 See [`docs/protocol.md`](docs/protocol.md) and the copy-paste [`minimal provider example`](docs/provider-example.md).
 
+Preset time blocks (`morning`, `day`, `evening`, `night`) follow the host machine's local hour with no timezone override — see [Limitations](docs/protocol.md#limitations) for how this affects presets such as `focus-day` and `night-owl`.
+
 ## Built-in demo provider
 
 The built-in demo provider exists to prove the host loop first:

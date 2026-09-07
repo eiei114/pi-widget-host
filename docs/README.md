@@ -7,7 +7,7 @@ Entry point for `pi-widget-host` maintainer and provider-author docs.
 | Doc | Purpose |
 |---|---|
 | [`config.md`](config.md) | `HostConfig` field contract, defaults, and `normalizeConfig` coercion rules. |
-| [`protocol.md`](protocol.md) | Registry protocol reference (`globalThis`, required fields, tags, TTL). |
+| [`protocol.md`](protocol.md) | Registry protocol reference (`globalThis`, required fields, tags, TTL). Includes [time-block timezone limitations](protocol.md#limitations). |
 | [`provider-example.md`](provider-example.md) | Minimal copy-paste provider that publishes through the registry. |
 | [`release.md`](release.md) | npm Trusted Publishing workflow and CI release automation. |
 
