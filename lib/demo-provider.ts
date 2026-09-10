@@ -1,6 +1,6 @@
 import { createProviderRuntime, type ProviderRuntime } from "pi-widget-core/provider";
 import { readHostConfig } from "./config.ts";
-import { detectTimeBlock } from "./policy.ts";
+import { DEFAULT_PRESET_ID, detectTimeBlock, getBlockPreferredTags, getPreset } from "./policy.ts";
 import { DEMO_PROVIDER_ID, type HostConfig, type ProviderEntry } from "./types.ts";
 
 const HEARTBEAT_MS = 30_000;
@@ -12,20 +12,6 @@ let runtime: ProviderRuntime | undefined;
 function ensureRuntime(): ProviderRuntime {
   runtime ??= createProviderRuntime({ providerId: DEMO_PROVIDER_ID });
   return runtime;
-}
-
-function baseTagsForBlock(block: ReturnType<typeof detectTimeBlock>): string[] {
-  switch (block) {
-    case "morning":
-      return ["music", "idle"];
-    case "day":
-      return ["sports", "idle"];
-    case "evening":
-      return ["music", "sports"];
-    case "night":
-    default:
-      return ["idle", "music"];
-  }
 }
 
 function readEventTags(): string[] {
@@ -41,7 +27,8 @@ function readEventTags(): string[] {
 
 export function buildDemoProviderEntry(config: HostConfig, now = new Date()): ProviderEntry {
   const block = detectTimeBlock(now);
-  const tags = [...new Set([...baseTagsForBlock(block), ...readEventTags()])];
+  const preferredTags = getBlockPreferredTags(getPreset(DEFAULT_PRESET_ID), block);
+  const tags = [...new Set([...preferredTags, ...readEventTags()])];
 
   return {
     providerId: DEMO_PROVIDER_ID,

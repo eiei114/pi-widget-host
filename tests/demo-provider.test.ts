@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createDefaultConfig } from "../lib/config.ts";
 import { buildDemoProviderEntry, stopDemoProviderHeartbeat, syncBuiltInDemoProvider } from "../lib/demo-provider.ts";
-import { evaluateProviderEntries } from "../lib/policy.ts";
+import { DEFAULT_PRESET_ID, evaluateProviderEntries, getBlockPreferredTags, getPreset } from "../lib/policy.ts";
 import { getWidgetHostRegistry, markHostPresent, clearHostPresent } from "../lib/registry.ts";
 import { DEMO_PROVIDER_ID } from "../lib/types.ts";
 
@@ -51,6 +51,39 @@ test("enabled demo provider publishes render lines through the registry", async 
     registry.clear();
     clearHostPresent();
   }
+});
+
+test("demo provider block tags reuse always-demo preset preferred tags", () => {
+  const config = {
+    ...createDefaultConfig(),
+    demoProviderEnabled: true,
+  };
+  const preset = getPreset(DEFAULT_PRESET_ID);
+  const blocks = [
+    { block: "morning" as const, at: new Date(2026, 5, 15, 7, 0, 0, 0) },
+    { block: "day" as const, at: new Date(2026, 5, 15, 13, 0, 0, 0) },
+    { block: "evening" as const, at: new Date(2026, 5, 15, 19, 0, 0, 0) },
+    { block: "night" as const, at: new Date(2026, 5, 15, 23, 0, 0, 0) },
+  ];
+
+  for (const { block, at } of blocks) {
+    const entry = buildDemoProviderEntry(config, at);
+    const expected = getBlockPreferredTags(preset, block);
+    assert.deepEqual([...(entry.tags ?? [])].sort(), [...expected].sort(), `${block} tags should match always-demo preset`);
+  }
+});
+
+test("demo provider tags ignore saved preset and stay on always-demo block tags", () => {
+  const config = {
+    ...createDefaultConfig(),
+    presetId: "focus-day",
+    demoProviderEnabled: true,
+  };
+  const morning = new Date(2026, 5, 15, 7, 0, 0, 0);
+  const entry = buildDemoProviderEntry(config, morning);
+  const alwaysDemoTags = getBlockPreferredTags(getPreset(DEFAULT_PRESET_ID), "morning");
+
+  assert.deepEqual([...(entry.tags ?? [])].sort(), [...alwaysDemoTags].sort());
 });
 
 test("buildDemoProviderEntry includes preset and time-block context", () => {

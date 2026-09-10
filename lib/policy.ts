@@ -46,6 +46,10 @@ export function getPreset(id: string | undefined): PolicyPreset {
   return PRESET_BY_ID.get(id ?? DEFAULT_PRESET_ID) ?? PRESET_OPTIONS[0]!;
 }
 
+export function getBlockPreferredTags(preset: PolicyPreset, block: HostTimeBlock): readonly KnownHostTag[] {
+  return preset.blocks[block].preferredTags ?? [];
+}
+
 export function detectTimeBlock(now = new Date()): HostTimeBlock {
   const hour = now.getHours();
   if (hour >= 5 && hour < 11) return "morning";
