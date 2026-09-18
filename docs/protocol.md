@@ -73,3 +73,43 @@ Because presets are keyed by these blocks, the same `presetId` can behave differ
 - **`night-owl`** stays **silent during `morning` and `day`**, then allows the slot in `evening` and `night`. Travel or remote machines can flip eligibility without any config change.
 
 When debugging provider priority or preset behavior, check the host's local time and current block before assuming a config bug.
+
+### Scheduling examples (local hour assumptions)
+
+The examples below mirror `tests/time-block-policy.test.ts`. Each `Date` is constructed with the host's **local** calendar fields (`new Date(year, month, day, hour, …)`), so the resulting time block follows the machine timezone, not UTC.
+
+**Example 1 — `night-owl` stays silent during work hours**
+
+With `presetId: "night-owl"` and one eligible demo provider:
+
+| Local time on host | `detectTimeBlock` | Widget slot |
+|---|---|---|
+| 07:00 | `morning` | silent |
+| 13:00 | `day` | silent |
+| 19:00 | `evening` | active |
+| 23:00 | `night` | active |
+
+The same saved preset can look "broken" when you compare against UTC. At **23:00 UTC** on a UTC host the block is `night` and the slot is active; on a **Tokyo-local host** that instant is **08:00 JST** (`morning`), so `night-owl` correctly stays silent.
+
+**Example 2 — `focus-day` vs `always-demo` at local night**
+
+At **23:30 local** with one eligible provider:
+
+- `always-demo` — slot stays active (`night` block is allowed).
+- `focus-day` — slot is silent (`night` block sets `allowedProviderIds: []`).
+
+**Example 3 — TTL refresh scheduling is UTC-based**
+
+Stale exclusion and the host's stale-TTL `setTimeout` use `updatedAt` (ISO-8601 UTC) plus `ttlMs`. That path does **not** read local hour boundaries:
+
+```ts
+registry.set({
+  providerId: "example.stale-check",
+  available: true,
+  lines: ["hello"],
+  updatedAt: new Date().toISOString(), // UTC instant
+  ttlMs: 90_000,
+});
+```
+
+A provider published at `2026-06-15T12:00:00.000Z` with `ttlMs: 60_000` goes stale at `12:01:00Z` on every host, regardless of preset or local time block. Do not mix this TTL clock with preset time-block scheduling when debugging.

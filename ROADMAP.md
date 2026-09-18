@@ -82,7 +82,7 @@ Goal: broaden the policy surface once the foundations are proven — additional 
 
 Each item is a candidate 30–90 minute micro-seed (see §5).
 
-- **Time blocks are local-TZ only.** `detectTimeBlock` reads the host's local hour with no timezone override; this limitation is undocumented in `docs/protocol.md` or a FAQ.
+- **Time blocks are local-TZ only.** `detectTimeBlock` reads the host's local hour with no timezone override; documented in `docs/protocol.md` (Limitations + scheduling examples) and linked from README / `docs/provider-example.md`.
 - **No lint/format policy.** No ESLint / Prettier / Biome config; `npm run ci` runs `tsc` + `node:test` + `npm pack --dry-run` only. The choice is fine, but it is currently implicit in CONTRIBUTING.
 - **Registry protocol has a single real user.** Only the built-in demo provider exercises publish/list/subscribe/remove in production; the pilot risk is protocol drift without a second integrator.
 - **Command handlers lack behavioral tests.** `tests/extension.test.ts` asserts registration only; `/widget-host:setup`, `/widget-host:policy`, and mute/unmute flows have no direct handler coverage.
@@ -95,16 +95,6 @@ Each item is a candidate 30–90 minute micro-seed (see §5).
 Each seed is intentionally bounded to **30–90 minutes** and ships behind a green `npm run ci`. Pick one per maintenance window. Seeds are candidates, not commitments — promote a seed to a tracked issue when you start it.
 
 > How to run the gate locally: `npm install && npm run ci` (typecheck + tests + `npm pack --dry-run`).
-
-### Seed 5 — Document the local-timezone time-block limitation  ·  ~30–45 min
-
-Stop the silent surprise for provider authors in non-local-TZ environments.
-
-- **Why:** `detectTimeBlock` uses the host machine's local hour; presets like `focus-day` and `night-owl` behave differently across machines without any config override. This is easy to misread when debugging provider priority.
-- **Acceptance**
-  - A "Limitations" section in `docs/protocol.md` (or a new `docs/faq.md`) explains that `detectTimeBlock` uses the host's local hour with no TZ override.
-  - `README.md` or `docs/README.md` links to it.
-  - `npm run ci` is green.
 
 ### Seed 7 — Record the lint/format policy decision  ·  ~45–60 min
 
@@ -154,6 +144,7 @@ These bounded tasks landed since the last roadmap refresh and are kept here for 
 |---|---|---|
 | Seed 3 — Config schema docs | 2026-07 | `docs/config.md` + malformed-input test in `tests/config.test.ts`. |
 | Seed 4 — Stale-TTL & subscribe refresh tests | 2026-08 (`0.3.6`) | `tests/host-refresh.test.ts` (DOT-1696). |
+| Seed 5 — Local-timezone time-block limitation docs | 2026-09 (unreleased) | Limitations section in `docs/protocol.md` (DOT-1751); scheduling walkthrough examples and `docs/provider-example.md` timezone notes (DOT-1856). |
 | Seed 6 — Docs index | 2026-07 | `docs/README.md` linked from README and package tests. |
 
 ---
