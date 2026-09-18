@@ -33,3 +33,16 @@ registry?.set({
 ```
 
 Required fields are `providerId`, `available`, `lines`, and `updatedAt`. Optional fields such as `priority`, `tags`, `mode`, and `ttlMs` help the host choose between eligible providers. See [`protocol.md`](protocol.md) for the full registry shape and host selection notes.
+
+## Timezone assumptions
+
+Two different clocks appear in this example:
+
+| Field / mechanism | Time basis | Used for |
+|---|---|---|
+| `updatedAt` (`toISOString()`) | UTC instant | stale exclusion and stale-TTL refresh scheduling |
+| Preset time blocks (`morning`, `day`, …) | Host machine local hour | when a saved preset allows or silences the shared slot |
+
+`new Date().toISOString()` in the snippet above is correct for TTL bookkeeping. It does **not** pin the provider to a local time block — the host evaluates blocks separately via `detectTimeBlock(now)` when applying preset policy.
+
+If your provider should appear only during certain local hours, encode that in your own publish loop or tags; the host will still classify the current block from the **process local timezone**. See [Limitations — scheduling examples](protocol.md#scheduling-examples-local-hour-assumptions) for preset walkthroughs (`focus-day`, `night-owl`) and a UTC-vs-local debugging scenario.
