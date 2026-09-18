@@ -96,17 +96,6 @@ Each seed is intentionally bounded to **30–90 minutes** and ships behind a gre
 
 > How to run the gate locally: `npm install && npm run ci` (typecheck + tests + `npm pack --dry-run`).
 
-### Seed 5 — Document the local-timezone time-block limitation  ·  ~30–45 min  ·  **done** (DOT-1751, DOT-1856)
-
-Stop the silent surprise for provider authors in non-local-TZ environments.
-
-- **Why:** `detectTimeBlock` uses the host machine's local hour; presets like `focus-day` and `night-owl` behave differently across machines without any config override. This is easy to misread when debugging provider priority.
-- **Acceptance**
-  - A "Limitations" section in `docs/protocol.md` (or a new `docs/faq.md`) explains that `detectTimeBlock` uses the host's local hour with no TZ override.
-  - `README.md` or `docs/README.md` links to it.
-  - `npm run ci` is green.
-- **Landed:** Limitations section (DOT-1751); scheduling walkthrough examples and provider-example timezone notes (DOT-1856).
-
 ### Seed 7 — Record the lint/format policy decision  ·  ~45–60 min
 
 Make the implicit explicit so new contributors do not guess.
@@ -155,6 +144,7 @@ These bounded tasks landed since the last roadmap refresh and are kept here for 
 |---|---|---|
 | Seed 3 — Config schema docs | 2026-07 | `docs/config.md` + malformed-input test in `tests/config.test.ts`. |
 | Seed 4 — Stale-TTL & subscribe refresh tests | 2026-08 (`0.3.6`) | `tests/host-refresh.test.ts` (DOT-1696). |
+| Seed 5 — Local-timezone time-block limitation docs | 2026-09 (unreleased) | Limitations section in `docs/protocol.md` (DOT-1751); scheduling walkthrough examples and `docs/provider-example.md` timezone notes (DOT-1856). |
 | Seed 6 — Docs index | 2026-07 | `docs/README.md` linked from README and package tests. |
 
 ---
