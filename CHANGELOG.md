@@ -1,43 +1,28 @@
 # Changelog
 
-## [Unreleased]
+## Unreleased
 
 ## [0.3.11] - 2026-09-27
 
 - chore: periodic patch bump after 7+ days without npm publish
 
-## 0.3.10 - 2026-09-27
 
-- chore: periodic patch bump after 7+ days without npm publish
 
-## 0.3.9 - 2026-09-27
 
-- chore: periodic patch bump after 7+ days without npm publish
-
-## 0.3.8 - 2026-09-27
-
-- chore: periodic patch bump after 7+ days without npm publish
-
-## 0.3.7 - 2026-09-27
-
-- chore: periodic patch bump after 7+ days without npm publish
 
 All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
-
 ## [0.3.6] - 2026-08-22
 
 ### Changed
 
 - Merge the 2026-08-22 managed OSS dependency and maintenance PR batch.
-
 ## [0.3.5] - 2026-08-04
 
 ### Changed
 
 - Bump package version for the Discord release webhook verification.
-
 ## [0.3.4] - 2026-07-21
 
 ### Added
@@ -48,26 +33,22 @@ This project follows semantic versioning.
 
 - CONTRIBUTING release instructions now match the auto-release and publish workflow (no `follow-tags`).
 - Dependency updates for `pi-widget-core` and development tooling.
-
 ## [0.3.3] - 2026-07-04
 
 ### Added
 
 - Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
-
 ## [0.3.2] - 2026-06-26
 
 ### Fixed
 
 - npm Trusted Publishing publish retry after registry configuration fix (no functional changes from 0.3.1).
-
 ## [0.3.1] - 2026-06-25
 
 ### Changed
 
 - README install and development guidance now matches the current Pi OSS template baseline, including project-local install, `pi -e npm:pi-widget-host`, and `npm run pack:check` (`npm pack --dry-run`) validation in the public docs flow.
 - `Package contents` now lists the actual shipped paths instead of unused template resource directories.
-
 ## [0.3.0] - 2026-06-24
 
 ### Added
@@ -78,7 +59,6 @@ This project follows semantic versioning.
 ### Changed
 
 - Minor semver bump marking the completed Host-only MVP: event boost, known tags, registry protocol, and demo-provider dogfooding path.
-
 ## [0.2.0] - 2026-06-15
 
 ### Added
