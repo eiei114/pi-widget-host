@@ -13,7 +13,7 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 | Item | Value |
 |---|---|
 | Package | `pi-widget-host` |
-| Published version (npm `latest`) | `0.3.6` |
+| Published version (npm `latest`) | `0.3.11` |
 | `package.json` version | `0.3.11` |
 | Latest GitHub release | [`v0.3.6`](https://github.com/eiei114/pi-widget-host/releases/tag/v0.3.6) — 2026-08-22 |
 | Runtime dependency | `pi-widget-core` `^0.1.4` (npm latest `0.1.4`) |
