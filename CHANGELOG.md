@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
-## Unreleased
-
 ## [0.3.11] - 2026-09-27
 
 - chore: periodic patch bump after 7+ days without npm publish
@@ -89,3 +87,5 @@ This project follows semantic versioning.
 ### Changed
 
 - Replaced template placeholders and removed template-only skill, prompt, and theme resources.
+## Unreleased
+
