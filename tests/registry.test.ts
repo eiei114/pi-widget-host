@@ -68,15 +68,18 @@ test("repeated registry refreshes replace entries without duplicates and remove 
       priority: 10,
     });
     registry.set(currentEntry);
+    assert.equal(notifications, 2);
 
     for (let refresh = 0; refresh < 3; refresh += 1) {
       registry.set(currentEntry);
     }
+    assert.equal(notifications, 2, "identical refreshes must not notify");
     registry.remove("stale");
+    assert.equal(notifications, 3);
     registry.set(currentEntry);
 
     assert.deepEqual(registry.list(), [currentEntry]);
-    assert.equal(notifications, 3, "identical refreshes should not notify or create duplicate entries");
+    assert.equal(notifications, 3, "re-setting an identical entry must not notify");
   } finally {
     dispose();
     registry.clear();
