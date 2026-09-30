@@ -19,6 +19,7 @@ test("registry protocol publishes, lists, subscribes, and removes provider entri
     priority: 10,
     tags: ["music"],
   });
+  assert.equal(notifications, 1);
 
   registry.set({
     providerId: "demo",
@@ -28,7 +29,6 @@ test("registry protocol publishes, lists, subscribes, and removes provider entri
     priority: 10,
     tags: ["music"],
   });
-
   assert.equal(notifications, 1);
   assert.equal(registry.list()[0]?.providerId, "demo");
 
@@ -77,9 +77,9 @@ test("repeated registry refreshes replace entries without duplicates and remove 
     registry.remove("stale");
     assert.equal(notifications, 3);
     registry.set(currentEntry);
-    assert.equal(notifications, 3, "re-setting an identical entry must not notify");
 
     assert.deepEqual(registry.list(), [currentEntry]);
+    assert.equal(notifications, 3, "re-setting an identical entry must not notify");
   } finally {
     dispose();
     registry.clear();
