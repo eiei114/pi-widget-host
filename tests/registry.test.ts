@@ -77,9 +77,9 @@ test("repeated registry refreshes replace entries without duplicates and remove 
     registry.remove("stale");
     assert.equal(notifications, 3);
     registry.set(currentEntry);
+    assert.equal(notifications, 3, "re-setting an identical entry must not notify");
 
     assert.deepEqual(registry.list(), [currentEntry]);
-    assert.equal(notifications, 3, "re-setting an identical entry must not notify");
   } finally {
     dispose();
     registry.clear();
