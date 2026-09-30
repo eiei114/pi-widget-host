@@ -19,6 +19,7 @@ test("registry protocol publishes, lists, subscribes, and removes provider entri
     priority: 10,
     tags: ["music"],
   });
+  assert.equal(notifications, 1);
 
   registry.set({
     providerId: "demo",
@@ -28,7 +29,6 @@ test("registry protocol publishes, lists, subscribes, and removes provider entri
     priority: 10,
     tags: ["music"],
   });
-
   assert.equal(notifications, 1);
   assert.equal(registry.list()[0]?.providerId, "demo");
 
