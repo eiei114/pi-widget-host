@@ -1,6 +1,6 @@
 {
   "name": "pi-widget-host",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "Host package for managing one shared Pi widget slot across multiple providers with preset policies and a built-in demo provider.",
   "type": "module",
   "license": "MIT",
@@ -57,7 +57,7 @@
     }
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "latest",
+    "@earendil-works/pi-coding-agent": "^0.99.1",
     "@types/node": "^26.0.0",
     "tsx": "^4.20.6",
     "typescript": "^7.0.2"
