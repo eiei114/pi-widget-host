@@ -58,9 +58,20 @@ export function detectTimeBlock(now = new Date()): HostTimeBlock {
   return "night";
 }
 
+const UPDATED_AT_MS_CACHE = new Map<string, number>();
+
+function parseUpdatedAtMs(updatedAt: string): number {
+  const cached = UPDATED_AT_MS_CACHE.get(updatedAt);
+  if (cached !== undefined) return cached;
+  const parsed = Date.parse(updatedAt);
+  if (UPDATED_AT_MS_CACHE.size >= 1_000) UPDATED_AT_MS_CACHE.clear();
+  UPDATED_AT_MS_CACHE.set(updatedAt, parsed);
+  return parsed;
+}
+
 export function getRemainingTtlMs(entry: Pick<ProviderEntry, "updatedAt" | "ttlMs">, nowMs = Date.now()): number | undefined {
   if (typeof entry.ttlMs !== "number" || entry.ttlMs <= 0) return undefined;
-  const updatedAtMs = Date.parse(entry.updatedAt);
+  const updatedAtMs = parseUpdatedAtMs(entry.updatedAt);
   if (!Number.isFinite(updatedAtMs)) return undefined;
   return updatedAtMs + entry.ttlMs - nowMs;
 }
@@ -117,7 +128,10 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
   const allowedProviderIds =
     blockPolicy.allowedProviderIds === undefined ? undefined : new Set(blockPolicy.allowedProviderIds);
 
-  const providerStates = entries.map<ProviderState>((entry) => {
+  const providerStates: ProviderState[] = [];
+  let winner: ProviderState | undefined;
+
+  for (const entry of entries) {
     const knownTagSet = normalizeKnownTags(entry.tags);
     const isMuted = mutedProviderIds.has(entry.providerId);
     const isStale = isEntryStale(entry, now);
@@ -142,7 +156,7 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
       effectiveStatus = "unavailable";
     }
 
-    return {
+    const state: ProviderState = {
       ...entry,
       effectivePriority,
       effectiveStatus,
@@ -151,15 +165,19 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
       isMuted,
       isStale,
     };
-  });
+    providerStates.push(state);
 
-  const winner = providerStates
-    .filter((state) => state.effectiveStatus === "eligible")
-    .sort((left, right) => right.effectivePriority - left.effectivePriority || left.providerId.localeCompare(right.providerId))[0];
-
-  if (winner) {
-    winner.effectiveStatus = "active";
+    if (
+      state.effectiveStatus === "eligible" &&
+      (!winner ||
+        state.effectivePriority > winner.effectivePriority ||
+        (state.effectivePriority === winner.effectivePriority && state.providerId.localeCompare(winner.providerId) < 0))
+    ) {
+      winner = state;
+    }
   }
+
+  if (winner) winner.effectiveStatus = "active";
 
   return {
     timeBlock,
