@@ -130,11 +130,13 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
 
   const providerStates: ProviderState[] = [];
   let winner: ProviderState | undefined;
+  const nowMs = now.getTime();
 
   for (const entry of entries) {
     const knownTagSet = normalizeKnownTags(entry.tags);
     const isMuted = mutedProviderIds.has(entry.providerId);
-    const isStale = isEntryStale(entry, now);
+    const remainingTtlMs = getRemainingTtlMs(entry, nowMs);
+    const isStale = typeof remainingTtlMs === "number" ? remainingTtlMs <= 0 : false;
     const hasLines = Array.isArray(entry.lines) && entry.lines.length > 0;
     const isAllowed = allowedProviderIds === undefined || allowedProviderIds.has(entry.providerId);
     const reasons: string[] = [];
