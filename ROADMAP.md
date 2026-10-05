@@ -18,7 +18,7 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 | Latest GitHub release | [`v0.3.12`](https://github.com/eiei114/pi-widget-host/releases/tag/v0.3.12) — 2026-09-30 |
 | Runtime dependency | `pi-widget-core` `^0.1.4` (npm latest `0.1.4`) |
 | Release mechanism | npm Trusted Publishing via `.github/workflows/auto-release.yml` + `publish.yml` |
-| CI gate | `npm run ci` — typecheck + 32 `node:test` cases + `npm pack --dry-run` |
+| CI gate | `npm run ci` — typecheck + 36 `node:test` cases + `npm pack --dry-run` |
 
 ### Release line so far
 
@@ -32,11 +32,14 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 | `0.3.4` | 2026-07-20 | ROADMAP maintenance context, CONTRIBUTING/release doc alignment, dependency updates. |
 | `0.3.5` | 2026-08-04 | Discord community badge and release webhook verification. |
 | `0.3.6` | 2026-08-22 | Managed OSS dependency batch; stale-TTL and registry-subscribe refresh test coverage (DOT-1696). |
+| `0.3.7`–`0.3.11` | 2026-09-27–2026-09-28 | Periodic patch releases and release-gate maintenance while keeping the publish line current. |
+| `0.3.12` | 2026-09-30 | Pi SDK `0.99.1` dependency refresh. |
 
 ### Milestone state
 
 - **Host-only MVP — done.** One shared slot, preset-first time-block policy, registry protocol v1, built-in demo provider, silent empty slot. This is the supported surface today.
-- **Host lifecycle coverage — improved.** `tests/host-refresh.test.ts` now covers stale-TTL reschedule and registry `subscribe` refresh paths; command registration remains in `tests/extension.test.ts`.
+- **Host lifecycle coverage — improved.** `tests/host-refresh.test.ts` covers stale-TTL reschedule and registry `subscribe` refresh paths, while registry tests cover repeated refresh notifications; command registration remains in `tests/extension.test.ts`.
+- **Policy evaluation — within budget.** Provider policy evaluation now reuses parsed timestamps and the evaluation clock, with performance coverage in `tests/policy-perf.test.ts`.
 - **Config & docs baseline — done.** `docs/config.md`, `docs/README.md`, and `docs/provider-example.md` are linked from README and validated by `tests/package.test.ts`.
 - **Multi-provider reality — not yet proven.** The registry protocol is the headline abstraction, but only the built-in demo provider publishes through it. No second provider package has validated the protocol end-to-end yet.
 
@@ -48,7 +51,7 @@ In priority order:
 
 1. **Keep the `0.3.x` line green and dependency-current.** Dependabot hygiene, CHANGELOG sync, and `npm run ci` must stay clean on `main`.
 2. **Prove the registry protocol with a real second provider.** This is the biggest open risk: the core abstraction has exactly one user (the demo provider). A minimal external provider de-risks v1 before any v2 work.
-3. **Close remaining doc and policy gaps before `0.4.0`.** Local-timezone time-block behavior and the lint/format policy are still implicit; provider authors need both spelled out.
+3. **Close remaining doc and policy gaps before `0.4.0`.** Local-timezone time-block behavior is documented; provider authors still need the remaining protocol and pilot expectations spelled out.
 4. **Deepen command-path coverage only where it blocks the pilot.** Refresh/timer paths are covered; next tests should focus on `/widget-host:*` handler behavior if the pilot surfaces gaps.
 
 Non-goals for this cycle: a v2 registry protocol, a UI settings screen, automated provider discovery beyond `globalThis`.
@@ -83,7 +86,7 @@ Goal: broaden the policy surface once the foundations are proven — additional 
 Each item is a candidate 30–90 minute micro-seed (see §5).
 
 - **Time blocks are local-TZ only.** `detectTimeBlock` reads the host's local hour with no timezone override; documented in `docs/protocol.md` (Limitations + scheduling examples) and linked from README / `docs/provider-example.md`.
-- **No lint/format policy.** No ESLint / Prettier / Biome config; `npm run ci` runs `tsc` + `node:test` + `npm pack --dry-run` only. The choice is fine, but it is currently implicit in CONTRIBUTING.
+- **No lint/format tool.** No ESLint / Prettier / Biome config; `CONTRIBUTING.md` documents the intentional `tsc` + `node:test` + `npm pack --dry-run` policy and its revisit criteria.
 - **Registry protocol has a single real user.** Only the built-in demo provider exercises publish/list/subscribe/remove in production; the pilot risk is protocol drift without a second integrator.
 - **Command handlers lack behavioral tests.** `tests/extension.test.ts` asserts registration only; `/widget-host:setup`, `/widget-host:policy`, and mute/unmute flows have no direct handler coverage.
 - **npm audit backlog.** `npm install` currently reports transitive dev-dependency vulnerabilities; triage and safe bumps belong in a bounded maintenance window.
@@ -95,15 +98,6 @@ Each item is a candidate 30–90 minute micro-seed (see §5).
 Each seed is intentionally bounded to **30–90 minutes** and ships behind a green `npm run ci`. Pick one per maintenance window. Seeds are candidates, not commitments — promote a seed to a tracked issue when you start it.
 
 > How to run the gate locally: `npm install && npm run ci` (typecheck + tests + `npm pack --dry-run`).
-
-### Seed 7 — Record the lint/format policy decision  ·  ~45–60 min
-
-Make the implicit explicit so new contributors do not guess.
-
-- **Why:** There is no ESLint/Biome/Prettier config and no written rationale; maintenance agents waste time re-deciding whether to add one on every docs-only PR.
-- **Acceptance**
-  - Either a short decision note in `CONTRIBUTING.md` (or a `docs/decisions/` ADR) stating the current "tsc + `node:test` + `npm pack --dry-run` only" policy and when it would change, **or** a minimal Biome/ESLint config plus an `npm run lint` script wired into `npm run ci`.
-  - `npm run ci` is green.
 
 ### Seed 8 — Add an in-repo second-provider integration test  ·  ~60–90 min
 
@@ -146,6 +140,7 @@ These bounded tasks landed since the last roadmap refresh and are kept here for 
 | Seed 4 — Stale-TTL & subscribe refresh tests | 2026-08 (`0.3.6`) | `tests/host-refresh.test.ts` (DOT-1696). |
 | Seed 5 — Local-timezone time-block limitation docs | 2026-09 (unreleased) | Limitations section in `docs/protocol.md` (DOT-1751); scheduling walkthrough examples and `docs/provider-example.md` timezone notes (DOT-1856). |
 | Seed 6 — Docs index | 2026-07 | `docs/README.md` linked from README and package tests. |
+| Seed 7 — Lint/format policy decision | 2026-09 | `CONTRIBUTING.md` documents the intentional `tsc` + `node:test` + `npm pack --dry-run` gate and revisit criteria. |
 
 ---
 
@@ -153,5 +148,6 @@ These bounded tasks landed since the last roadmap refresh and are kept here for 
 
 - Update §1 whenever a version ships or a dependency floor moves.
 - Promote a §5 seed to "in progress" by opening a tracking issue; move finished seeds to §6 and the relevant release line in §3.
+- **Next recommended seed:** Seed 8, because a second synthetic provider is the smallest remaining validation of the registry's selection and mute behavior before the external `0.4.0` pilot.
 - Keep each seed bounded to 30–90 minutes with explicit acceptance criteria — if a seed grows past that, split it.
 - This file does not ship in the npm package, so roadmap edits never require a version bump or publish on their own.
