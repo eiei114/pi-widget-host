@@ -42,6 +42,18 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 
 ---
 
+## Roadmap review — 2026-W41
+
+The roadmap source is present and has been refreshed against the current `main` branch
+(release `0.3.5`). The next bounded maintenance candidates are:
+
+1. **Seed 4** — Cover the stale-TTL and registry-subscribe refresh paths in tests.
+2. **Seed 5** — Document the local-timezone time-block limitation.
+3. **Seed 6** — Add a docs index for host/provider onboarding.
+
+These candidates are already recorded in the maintenance backlog below; no
+implementation or release action is part of this roadmap refresh.
+
 ## 2. Priorities
 
 In priority order:
