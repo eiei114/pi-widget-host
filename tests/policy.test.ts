@@ -82,6 +82,6 @@ test("mute and stale entries are excluded from selection", () => {
 
 test("unknown tags are ignored safely", () => {
   const config = createDefaultConfig();
-  const result = evaluateProviderEntries([baseEntry({ tags: ["music", "totally-unknown"] })], config, new Date("2026-06-15T06:00:00.000Z"));
+  const result = evaluateProviderEntries([baseEntry({ tags: ["music", "music", "totally-unknown"] })], config, new Date("2026-06-15T06:00:00.000Z"));
   assert.deepEqual(result.providerStates[0]?.knownTags, ["music"]);
 });
