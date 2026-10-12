@@ -1,6 +1,6 @@
 {
   "name": "pi-widget-host",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "Host package for managing one shared Pi widget slot across multiple providers with preset policies and a built-in demo provider.",
   "type": "module",
   "license": "MIT",
@@ -30,9 +30,10 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "ci": "npm run typecheck && npm test && npm run pack:check",
-    "pack:check": "npm pack --dry-run"
+    "test": "node --import tsx --test tests/*.test.ts tests/*.test.mjs",
+    "ci": "npm run typecheck && npm test && npm run pack:check && npm run smoke:pi",
+    "pack:check": "npm pack --dry-run",
+    "smoke:pi": "node scripts/pi-sdk-smoke.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -57,7 +58,10 @@
     }
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.99.1",
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
+    "@earendil-works/pi-coding-agent": "1.1.0",
+    "@earendil-works/pi-tui": "1.1.0",
     "@types/node": "^26.0.0",
     "tsx": "^4.20.6",
     "typescript": "^7.0.2"
