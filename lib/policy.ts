@@ -81,29 +81,29 @@ export function isEntryStale(entry: Pick<ProviderEntry, "updatedAt" | "ttlMs">, 
   return typeof remaining === "number" ? remaining <= 0 : false;
 }
 
-function tagScore(knownTags: ReadonlySet<KnownHostTag>, preferredTags: readonly KnownHostTag[] | undefined): number {
+function tagScore(knownTags: readonly KnownHostTag[], preferredTags: readonly KnownHostTag[] | undefined): number {
   if (!preferredTags || preferredTags.length === 0) return 0;
   let best = 0;
   for (let index = 0; index < preferredTags.length; index++) {
     const tag = preferredTags[index]!;
-    if (!knownTags.has(tag)) continue;
+    if (!knownTags.includes(tag)) continue;
     best = Math.max(best, Math.max(40 - index * 10, 10));
   }
   return best;
 }
 
-function eventBoost(knownTags: ReadonlySet<KnownHostTag>): number {
+function eventBoost(knownTags: readonly KnownHostTag[]): number {
   let boost = 0;
-  if (knownTags.has("playing-now")) boost += 100;
-  if (knownTags.has("matchday")) boost += 80;
+  if (knownTags.includes("playing-now")) boost += 100;
+  if (knownTags.includes("matchday")) boost += 80;
   return boost;
 }
 
-function normalizeKnownTags(tags: string[] | undefined): Set<KnownHostTag> {
-  const known = new Set<KnownHostTag>();
+function normalizeKnownTags(tags: string[] | undefined): KnownHostTag[] {
+  const known: KnownHostTag[] = [];
   for (const tag of tags ?? []) {
-    if (KNOWN_HOST_TAG_SET.has(tag)) {
-      known.add(tag as KnownHostTag);
+    if (KNOWN_HOST_TAG_SET.has(tag) && !known.includes(tag as KnownHostTag)) {
+      known.push(tag as KnownHostTag);
     }
   }
   return known;
@@ -133,7 +133,7 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
   const nowMs = now.getTime();
 
   for (const entry of entries) {
-    const knownTagSet = normalizeKnownTags(entry.tags);
+    const knownTags = normalizeKnownTags(entry.tags);
     const isMuted = mutedProviderIds.has(entry.providerId);
     const remainingTtlMs = getRemainingTtlMs(entry, nowMs);
     const isStale = typeof remainingTtlMs === "number" ? remainingTtlMs <= 0 : false;
@@ -147,7 +147,7 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
     if (isMuted) reasons.push("muted in host config");
     if (isStale) reasons.push("stale ttl");
 
-    const effectivePriority = (entry.priority ?? 0) + tagScore(knownTagSet, blockPolicy.preferredTags) + eventBoost(knownTagSet);
+    const effectivePriority = (entry.priority ?? 0) + tagScore(knownTags, blockPolicy.preferredTags) + eventBoost(knownTags);
 
     let effectiveStatus: ProviderState["effectiveStatus"] = "eligible";
     if (isMuted) {
@@ -162,7 +162,7 @@ export function evaluateProviderEntries(entries: readonly ProviderEntry[], confi
       ...entry,
       effectivePriority,
       effectiveStatus,
-      knownTags: [...knownTagSet],
+      knownTags,
       reasons,
       isMuted,
       isStale,

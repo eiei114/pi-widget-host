@@ -7,6 +7,8 @@ const packageLock = JSON.parse(await readFile(new URL("../package-lock.json", im
 const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.url), "utf8");
 const releaseDoc = await readFile(new URL("../docs/release.md", import.meta.url), "utf8");
+const autoReleaseWorkflow = await readFile(new URL("../.github/workflows/auto-release.yml", import.meta.url), "utf8");
+const publishWorkflow = await readFile(new URL("../.github/workflows/publish.yml", import.meta.url), "utf8");
 const changelog = await readFile(new URL("../CHANGELOG.md", import.meta.url), "utf8");
 const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
 const docsIndex = await readFile(new URL("../docs/README.md", import.meta.url), "utf8");
@@ -43,11 +45,12 @@ test("changelog documents the current package version", () => {
   }
 });
 
-test("roadmap reflects the current package version", () => {
+test("roadmap reports package and published versions separately", () => {
   const escapedVersion = packageJson.version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  assert.match(roadmap, new RegExp(`Published version \\(npm \`latest\`\\) \\| \`${escapedVersion}\``));
+  const publishedVersion = roadmap.match(/\| Published version \(npm `latest`\) \| `(\d+\.\d+\.\d+)` \|/)?.[1];
+  assert.ok(publishedVersion, "roadmap should record the published npm version");
+  assert.ok(roadmap.includes("| Latest GitHub release | [`v" + publishedVersion + "`]"));
   assert.match(roadmap, new RegExp(`\`package\.json\` version \\| \`${escapedVersion}\``));
-  assert.match(roadmap, new RegExp(`\\[\`v${escapedVersion}\`\\]`));
   assert.doesNotMatch(roadmap, /No provider example/i);
   assert.match(roadmap, /docs\/provider-example\.md/);
 });
@@ -59,6 +62,15 @@ test("contributing release instructions match trusted publishing workflow", () =
   assert.match(releaseDoc, /auto-release\.yml/);
   assert.match(releaseDoc, /publish\.yml/);
   assert.doesNotMatch(releaseDoc, /follow-tags/);
+});
+
+test("package version pushes cannot start release or publish workflows", () => {
+  assert.match(autoReleaseWorkflow, /^on:\r?\n  workflow_dispatch:\r?$/m);
+  assert.match(autoReleaseWorkflow, /^    if: github\.ref == 'refs\/heads\/main'$/m);
+  assert.doesNotMatch(autoReleaseWorkflow, /^  push:/m);
+  assert.match(publishWorkflow, /^on:\r?\n  release:/m);
+  assert.match(publishWorkflow, /^  workflow_dispatch:/m);
+  assert.doesNotMatch(publishWorkflow, /^  push:/m);
 });
 
 test("docs index links the registry and maintenance docs", () => {

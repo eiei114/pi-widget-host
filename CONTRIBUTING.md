@@ -40,10 +40,10 @@ Before opening a PR:
 
 Releases use npm Trusted Publishing. Do not add `NPM_TOKEN` to GitHub Secrets.
 
-On `main`, `.github/workflows/auto-release.yml` creates the `v<version>` tag and GitHub Release after a `package.json` version bump, then dispatches `.github/workflows/publish.yml`.
+Merging a version bump to `main` does not create a tag or publish a package. After release approval, manually run **Auto Release** from GitHub Actions with `main` selected; it creates the `v<version>` tag and GitHub Release, then dispatches `.github/workflows/publish.yml`.
 
 ```bash
-npm version patch
+npm version patch --no-git-tag-version
 git push
 ```
 
