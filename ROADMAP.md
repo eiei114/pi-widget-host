@@ -14,7 +14,7 @@ It exists so the weekly maintenance seed planner (and any human contributor) can
 |---|---|
 | Package | `pi-widget-host` |
 | Published version (npm `latest`) | `0.3.12` |
-| `package.json` version | `0.3.12` |
+| `package.json` version | `0.3.13` |
 | Latest GitHub release | [`v0.3.12`](https://github.com/eiei114/pi-widget-host/releases/tag/v0.3.12) — 2026-09-30 |
 | Runtime dependency | `pi-widget-core` `^0.1.4` (npm latest `0.1.4`) |
 | Release mechanism | npm Trusted Publishing via `.github/workflows/auto-release.yml` + `publish.yml` |

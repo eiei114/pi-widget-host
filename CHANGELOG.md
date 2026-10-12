@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.13] - 2026-10-12
+
+### Changed
+
+- Reduce policy tag normalization allocations while preserving tag order and scoring.
+
 ## [0.3.12] - 2026-09-30
 
 ### Changed

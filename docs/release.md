@@ -15,13 +15,12 @@ On npmjs.com, configure Trusted Publishing for this package:
 ## Publish
 
 ```bash
-npm version patch
+npm version patch --no-git-tag-version
 git push
 ```
 
-On `main`, `.github/workflows/auto-release.yml` checks `package.json` version. If `v<version>` does not exist yet, it creates the tag, creates the GitHub Release, then explicitly dispatches `.github/workflows/publish.yml` for that tag.
+Merge the version bump to `main`, then, after release approval, manually run **Auto Release** from GitHub Actions with `main` selected. It creates the `v<version>` tag, creates the GitHub Release, then explicitly dispatches `.github/workflows/publish.yml` for that tag. Version changes pushed to `main` do not trigger release or publishing.
 
-The `v*.*.*` tag also triggers `.github/workflows/publish.yml`, which runs CI and publishes to npm when tags are pushed manually.
 Publishing also runs when a GitHub Release is published, and can be run manually from GitHub Actions with `workflow_dispatch`.
 
 The workflow skips `name@version` if that exact package version already exists on npm.
@@ -31,7 +30,7 @@ The workflow skips `name@version` if that exact package version already exists o
 Do not ship a new Pi OSS package or version bump with only `package.json` changes.
 The repository must include the release workflow pair:
 
-- `.github/workflows/auto-release.yml` creates `v<version>` tags and GitHub Releases from `main` version bumps.
+- `.github/workflows/auto-release.yml` runs only when manually dispatched from `main`, after explicit release approval.
 - `.github/workflows/publish.yml` publishes to npm through Trusted Publishing.
 
 Important: tags or releases created by `GITHUB_TOKEN` do not reliably fan out into another workflow through normal `push.tags` or `release.published` triggers. The template keeps publishing reliable by having `auto-release.yml` explicitly dispatch `publish.yml` after creating the tag/release. If you change the release flow, keep one explicit handoff path: `workflow_dispatch` from auto-release, `repository_dispatch`, or `workflow_run` on the auto-release workflow.
