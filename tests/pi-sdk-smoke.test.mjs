@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { behaviorAssertions, parseJsonLines } from "../scripts/pi-sdk-smoke-contract.mjs";
+import { withSmokeDirectoryCleanup } from "../scripts/pi-sdk-smoke-cleanup.mjs";
 
 const commandResponse = {
   type: "response",
@@ -19,6 +20,23 @@ const happyNotification = {
   method: "notify",
   message: "Setup: done\nDemo provider: enabled\nActive provider: pi-widget-host.demo",
 };
+
+test("Pi smoke preserves a timed-out failed case when Windows cleanup raises EBUSY", async () => {
+  const timeoutCase = {
+    name: "happy_path",
+    exit_code: -1,
+    passed: false,
+    error: "Pi RPC child did not exit within the 1s cleanup grace after 15000ms",
+  };
+  const result = await withSmokeDirectoryCleanup("busy-temp-directory", async () => timeoutCase, (directory, options) => {
+    assert.equal(directory, "busy-temp-directory");
+    assert.deepEqual(options, { recursive: true, force: true });
+    throw Object.assign(new Error("resource busy"), { code: "EBUSY" });
+  });
+
+  assert.deepEqual(result, timeoutCase);
+  assert.equal(result.passed, false);
+});
 
 test("Pi SDK smoke contract parses JSONL and accepts observed feature behavior", () => {
   assert.deepEqual(parseJsonLines('{"type":"response"}\nnot-json\n'), [{ type: "response" }]);

@@ -95,7 +95,7 @@ Goal: broaden the policy surface once the foundations are proven — additional 
 Each item is a candidate 30–90 minute micro-seed (see §5).
 
 - **Time blocks are local-TZ only.** `detectTimeBlock` reads the host's local hour with no timezone override; documented in `docs/protocol.md` (Limitations + scheduling examples) and linked from README / `docs/provider-example.md`.
-- **No lint/format policy.** No ESLint / Prettier / Biome config; `npm run ci` runs `tsc` + `node:test` + `npm pack --dry-run` only. The choice is fine, but it is currently implicit in CONTRIBUTING.
+- **No lint/format policy.** No ESLint / Prettier / Biome config; `npm run ci` runs `tsc` + `node:test` + `npm pack --dry-run` + `smoke:pi`. The choice is fine, but it is currently implicit in CONTRIBUTING.
 - **Registry protocol has a single real user.** Only the built-in demo provider exercises publish/list/subscribe/remove in production; the pilot risk is protocol drift without a second integrator.
 - **Command handlers lack behavioral tests.** `tests/extension.test.ts` asserts registration only; `/widget-host:setup`, `/widget-host:policy`, and mute/unmute flows have no direct handler coverage.
 - **npm audit backlog.** `npm install` currently reports transitive dev-dependency vulnerabilities; triage and safe bumps belong in a bounded maintenance window.
@@ -106,7 +106,7 @@ Each item is a candidate 30–90 minute micro-seed (see §5).
 
 Each seed is intentionally bounded to **30–90 minutes** and ships behind a green `npm run ci`. Pick one per maintenance window. Seeds are candidates, not commitments — promote a seed to a tracked issue when you start it.
 
-> How to run the gate locally: `npm install && npm run ci` (typecheck + tests + `npm pack --dry-run`).
+> How to run the gate locally: `npm install && npm run ci` (typecheck + tests + `npm pack --dry-run` + `smoke:pi`).
 
 ### Seed 7 — Record the lint/format policy decision  ·  ~45–60 min
 
@@ -114,7 +114,7 @@ Make the implicit explicit so new contributors do not guess.
 
 - **Why:** There is no ESLint/Biome/Prettier config and no written rationale; maintenance agents waste time re-deciding whether to add one on every docs-only PR.
 - **Acceptance**
-  - Either a short decision note in `CONTRIBUTING.md` (or a `docs/decisions/` ADR) stating the current "tsc + `node:test` + `npm pack --dry-run` only" policy and when it would change, **or** a minimal Biome/ESLint config plus an `npm run lint` script wired into `npm run ci`.
+  - Either a short decision note in `CONTRIBUTING.md` (or a `docs/decisions/` ADR) stating the current "tsc + `node:test` + `npm pack --dry-run` + `smoke:pi`" policy and when it would change, **or** a minimal Biome/ESLint config plus an `npm run lint` script wired into `npm run ci`.
   - `npm run ci` is green.
 
 ### Seed 8 — Add an in-repo second-provider integration test  ·  ~60–90 min

@@ -10,6 +10,7 @@ import {
   UNHANDLED_ERROR_PATTERN,
   VERIFICATION_CONTRACT,
 } from "./pi-sdk-smoke-contract.mjs";
+import { withSmokeDirectoryCleanup } from "./pi-sdk-smoke-cleanup.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const reportPath = process.argv.includes("--update-curated-report")
@@ -212,17 +213,15 @@ function makeCase(name, processes, assertionInput = {}) {
 
 async function runRpcCase(name, configText) {
   const agentDir = createAgentDir(configText);
-  try {
+  return withSmokeDirectoryCleanup(agentDir, async () => {
     const result = await runRpcProcess(agentDir, { includePrompt: name !== "extension_load" });
     return makeCase(name, [result]);
-  } finally {
-    rmSync(agentDir, { recursive: true, force: true });
-  }
+  });
 }
 
 async function runReloadCleanupCase() {
   const agentDir = createAgentDir(`${JSON.stringify(demoConfig, null, 2)}\n`);
-  try {
+  return withSmokeDirectoryCleanup(agentDir, async () => {
     const first = await runRpcProcess(agentDir);
     const second = await runRpcProcess(agentDir);
     return makeCase("reload_cleanup", [first, second], {
@@ -232,9 +231,7 @@ async function runReloadCleanupCase() {
       secondOutput: second.fullOutput,
       exitCode: second.exitCode,
     });
-  } finally {
-    rmSync(agentDir, { recursive: true, force: true });
-  }
+  });
 }
 
 function quotePowerShell(value) {
