@@ -12,7 +12,9 @@ import {
 } from "./pi-sdk-smoke-contract.mjs";
 
 const root = resolve(import.meta.dirname, "..");
-const reportPath = resolve(root, "docs/verification/pi-sdk-smoke.json");
+const reportPath = process.argv.includes("--update-curated-report")
+  ? resolve(root, "docs/verification/pi-sdk-smoke.json")
+  : resolve(root, ".tmp/pi-sdk-smoke.json");
 const shortProbeDeadlineMs = 15_000;
 const command = "npm run smoke:pi";
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
