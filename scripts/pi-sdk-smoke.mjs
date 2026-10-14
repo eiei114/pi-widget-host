@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import {
@@ -243,9 +243,9 @@ function redactEvidence(value) {
   return value.replaceAll(escapedRoot, "<repo>").replaceAll(root, "<repo>");
 }
 
-function runHostShellCase() {
+async function runHostShellCase() {
   const agentDir = mkdtempSync(resolve(tmpdir(), "pi-widget-host-shell-smoke-"));
-  try {
+  return withSmokeDirectoryCleanup(agentDir, async () => {
     let executable;
     let args;
     if (process.platform === "win32") {
@@ -266,9 +266,7 @@ function runHostShellCase() {
       exitCode: result.exitCode,
       fullOutput: result.stdout,
     });
-  } finally {
-    rmSync(agentDir, { recursive: true, force: true });
-  }
+  });
 }
 
 const cases = [];
@@ -276,7 +274,7 @@ cases.push(await runRpcCase("extension_load", `${JSON.stringify(demoConfig, null
 cases.push(await runRpcCase("happy_path", `${JSON.stringify(demoConfig, null, 2)}\n`));
 cases.push(await runRpcCase("error_path", "{ deliberately malformed host config\n"));
 cases.push(await runReloadCleanupCase());
-cases.push(runHostShellCase());
+cases.push(await runHostShellCase());
 
 const report = {
   schema_version: 1,
