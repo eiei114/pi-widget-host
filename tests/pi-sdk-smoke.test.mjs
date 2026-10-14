@@ -28,14 +28,19 @@ test("Pi smoke preserves a timed-out failed case when Windows cleanup raises EBU
     passed: false,
     error: "Pi RPC child did not exit within the 1s cleanup grace after 15000ms",
   };
+  let attempts = 0;
   const result = await withSmokeDirectoryCleanup("busy-temp-directory", async () => timeoutCase, (directory, options) => {
     assert.equal(directory, "busy-temp-directory");
     assert.deepEqual(options, { recursive: true, force: true });
+    attempts += 1;
     throw Object.assign(new Error("resource busy"), { code: "EBUSY" });
-  });
+  }, () => {});
 
-  assert.deepEqual(result, timeoutCase);
+  // Transient busy errors are retried; the failed case result is preserved.
+  assert.equal(attempts, 6);
+  assert.deepEqual({ ...result, cleanup_error: undefined }, { ...timeoutCase, cleanup_error: undefined });
   assert.equal(result.passed, false);
+  assert.match(result.cleanup_error, /resource busy/);
 });
 
 test("Pi SDK smoke contract parses JSONL and accepts observed feature behavior", () => {
@@ -105,4 +110,30 @@ test("Pi SDK smoke contract verifies the pinned CLI through the host shell", () 
     exitCode: 0,
     fullOutput: "",
   })[0]?.passed, false);
+});
+
+test("a retried cleanup succeeds after transient busy errors", async () => {
+  let attempts = 0;
+  const result = await withSmokeDirectoryCleanup("busy", async () => ({ passed: true }), () => {
+    attempts += 1;
+    if (attempts < 3) throw Object.assign(new Error("busy"), { code: "EBUSY" });
+  }, () => {});
+  assert.deepEqual(result, { passed: true });
+  assert.equal(attempts, 3);
+});
+
+test("a passed case is not reported as passed when cleanup never succeeds", async () => {
+  const result = await withSmokeDirectoryCleanup("busy", async () => ({ passed: true, name: "happy_path" }),
+    () => { throw Object.assign(new Error("resource busy"), { code: "EBUSY" }); }, () => {});
+  assert.equal(result.passed, false);
+  assert.match(result.cleanup_error, /resource busy/);
+  assert.equal(result.name, "happy_path");
+});
+
+test("a failed case keeps its original failure when cleanup also fails", async () => {
+  const failed = { passed: false, name: "error_path", error: "deadline" };
+  const result = await withSmokeDirectoryCleanup("busy", async () => failed,
+    () => { throw Object.assign(new Error("EBUSY"), { code: "EBUSY" }); }, () => {});
+  assert.equal(result.error, "deadline");
+  assert.equal(result.passed, false);
 });
