@@ -9,6 +9,7 @@ Entry point for `pi-widget-host` maintainer and provider-author docs.
 | [`config.md`](config.md) | `HostConfig` field contract, defaults, and `normalizeConfig` coercion rules. |
 | [`protocol.md`](protocol.md) | Registry protocol reference (`globalThis`, required fields, tags, TTL). Includes [time-block timezone limitations](protocol.md#limitations) and [scheduling examples](protocol.md#scheduling-examples-local-hour-assumptions). |
 | [`provider-example.md`](provider-example.md) | Minimal copy-paste provider that publishes through the registry. Notes [timezone assumptions](provider-example.md#timezone-assumptions) for `updatedAt` vs preset time blocks. |
+| [`pi-sdk-compatibility.md`](pi-sdk-compatibility.md) | Pi SDK 1.1.0 API compatibility notes and actual host smoke verification. |
 | [`release.md`](release.md) | npm Trusted Publishing workflow and CI release automation. |
 
 ## Maintenance context
