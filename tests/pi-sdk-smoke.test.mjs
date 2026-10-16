@@ -104,7 +104,7 @@ test("Pi SDK smoke contract requires second-process behavior and clean shutdown"
 test("Pi SDK smoke contract verifies the pinned CLI through the host shell", () => {
   assert.equal(behaviorAssertions("host_shell", {
     exitCode: 0,
-    fullOutput: "1.1.0\n",
+    fullOutput: "1.2.0\n",
   })[0]?.passed, true);
   assert.equal(behaviorAssertions("host_shell", {
     exitCode: 0,
