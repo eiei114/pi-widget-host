@@ -42,7 +42,7 @@ function handledPrompt(responses) {
 }
 
 export function behaviorAssertions(name, observation) {
-  const { responses = [], exitCode = -1, fullOutput = "", expectedVersion = "1.1.0" } = observation;
+  const { responses = [], exitCode = -1, fullOutput = "", expectedVersion = "1.2.0" } = observation;
   const commands = commandNames(responses);
   const prompt = handledPrompt(responses);
   const notification = statusNotification(responses);
