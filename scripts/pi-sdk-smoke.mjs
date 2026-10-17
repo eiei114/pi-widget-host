@@ -20,7 +20,7 @@ const shortProbeDeadlineMs = 15_000;
 const command = "npm run smoke:pi";
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const manifest = readJson(resolve(root, "package.json"));
-const frozenSdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [name, "1.2.0"]));
+const frozenSdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [name, "1.3.0"]));
 const sdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [
   name,
   readJson(resolve(root, "node_modules", name, "package.json")).version,
@@ -188,7 +188,7 @@ function makeCase(name, processes, assertionInput = {}) {
     responses,
     exitCode,
     fullOutput,
-    expectedVersion: "1.2.0",
+    expectedVersion: "1.3.0",
   });
   const evidence = processes.map((entry, index) => [
     `process ${index + 1}: exit=${entry.exitCode}${entry.error ? ` error=${entry.error}` : ""}`,

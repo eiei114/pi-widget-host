@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.16] - 2026-10-18
+
+### Changed
+
+- Align Pi SDK dev/test pins with 1.3.0 and refresh the compatibility smoke evidence.
+
 ## [0.3.15] - 2026-10-16
 
 ### Changed
