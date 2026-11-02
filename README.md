@@ -67,7 +67,13 @@ pi -e .
 
 ## Quick start
 
-Run the host locally, then open these commands:
+Launch the published host for this Pi session without installing it first:
+
+```bash
+pi -e npm:pi-widget-host
+```
+
+Then run these commands in Pi:
 
 ```txt
 /widget-host:setup

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.17] - 2026-10-27
+
+### Changed
+
+- Add a runnable quick-start command for launching the host in a Pi session.
+
 ## [0.3.16] - 2026-10-18
 
 ### Changed

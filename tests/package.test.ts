@@ -85,6 +85,10 @@ test("docs index links the registry and maintenance docs", () => {
 });
 
 test("readme documents host commands", () => {
+  const quickStart = readme.split("## Quick start")[1]?.split("\n## ")[0] ?? "";
+  assert.match(quickStart, /pi -e npm:pi-widget-host/);
+  assert.match(quickStart, /\/widget-host:setup/);
+
   assert.match(readme, /\/widget-host:setup/);
   assert.match(readme, /\/widget-host:status/);
   assert.match(readme, /\/widget-host:policy/);
