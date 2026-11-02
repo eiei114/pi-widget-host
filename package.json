@@ -47,7 +47,7 @@
     "access": "public"
   },
   "dependencies": {
-    "pi-widget-core": "^0.1.9"
+    "pi-widget-core": "^0.1.10"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
