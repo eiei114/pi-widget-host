@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.18] - 2026-11-04
+
+### Fixed
+
+- Stop the built-in demo provider from republishing unchanged content on every host refresh. Each publication notified host subscribers, which re-entered `refreshHostWidget` and published again, so one external provider event produced an unbounded refresh loop. A refresh now republishes only when the rendered content changed or the published entry has gone stale, which keeps `ttlMs` freshness intact.
+
 ## [0.3.17] - 2026-10-27
 
 ### Changed
