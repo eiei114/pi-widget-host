@@ -1,6 +1,6 @@
 import { createProviderRuntime, type ProviderRuntime } from "pi-widget-core/provider";
 import { readHostConfig } from "./config.ts";
-import { DEFAULT_PRESET_ID, detectTimeBlock, getBlockPreferredTags, getPreset } from "./policy.ts";
+import { DEFAULT_PRESET_ID, detectTimeBlock, getBlockPreferredTags, getPreset, getRemainingTtlMs } from "./policy.ts";
 import { DEMO_PROVIDER_ID, type HostConfig, type ProviderEntry } from "./types.ts";
 
 const HEARTBEAT_MS = 30_000;
@@ -8,10 +8,51 @@ const ENTRY_TTL_MS = 90_000;
 
 let heartbeat: NodeJS.Timeout | undefined;
 let runtime: ProviderRuntime | undefined;
+let publishedEntry: ProviderEntry | undefined;
 
 function ensureRuntime(): ProviderRuntime {
   runtime ??= createProviderRuntime({ providerId: DEMO_PROVIDER_ID });
   return runtime;
+}
+
+/**
+ * Identity of a demo entry, ignoring `updatedAt`.
+ *
+ * `buildDemoProviderEntry` stamps a fresh `updatedAt` on every call, so comparing
+ * whole entries never matches. `updatedAt` is not rendered content: it only tracks
+ * freshness, and the heartbeat is what advances it.
+ */
+function isSameContent(left: ProviderEntry, right: ProviderEntry): boolean {
+  return JSON.stringify({ ...left, updatedAt: "" }) === JSON.stringify({ ...right, updatedAt: "" });
+}
+
+/**
+ * Publishes only when the rendered content changed, or when the entry already in
+ * the registry has gone stale.
+ *
+ * The host registry notifies subscribers on every publish, and the host's registry
+ * watcher re-enters `refreshHostWidget` on that notification, which calls back into
+ * `syncBuiltInDemoProvider`. Republishing an unchanged, still-fresh entry therefore
+ * feeds the host its own echo and the refresh loop never settles. This guard is what
+ * keeps that loop bounded.
+ *
+ * Staleness is the deliberate exception: a refresh is the only thing that can revive
+ * an entry whose `ttlMs` elapsed without a heartbeat (for example after the process
+ * was suspended), so it must republish even when the content is unchanged.
+ */
+function publishIfChanged(entry: ProviderEntry): void {
+  if (publishedEntry && isSameContent(publishedEntry, entry)) {
+    const remaining = getRemainingTtlMs(publishedEntry, Date.now());
+    if (remaining === undefined || remaining > 0) return;
+  }
+  ensureRuntime().update(entry);
+  publishedEntry = entry;
+}
+
+/** Always republishes so `updatedAt` keeps the entry inside its `ttlMs` window. */
+function republish(entry: ProviderEntry): void {
+  ensureRuntime().update(entry);
+  publishedEntry = entry;
 }
 
 function readEventTags(): string[] {
@@ -48,7 +89,7 @@ async function heartbeatTick(): Promise<void> {
     stopDemoProviderHeartbeat();
     return;
   }
-  ensureRuntime().update(buildDemoProviderEntry(config));
+  republish(buildDemoProviderEntry(config));
 }
 
 function ensureHeartbeat(): void {
@@ -64,7 +105,7 @@ export async function syncBuiltInDemoProvider(config: HostConfig): Promise<void>
     return;
   }
 
-  ensureRuntime().update(buildDemoProviderEntry(config));
+  publishIfChanged(buildDemoProviderEntry(config));
   ensureHeartbeat();
 }
 
@@ -75,4 +116,5 @@ export function stopDemoProviderHeartbeat(): void {
   }
   runtime?.stop();
   runtime = undefined;
+  publishedEntry = undefined;
 }
