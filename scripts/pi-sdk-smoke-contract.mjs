@@ -42,7 +42,7 @@ function handledPrompt(responses) {
 }
 
 export function behaviorAssertions(name, observation) {
-  const { responses = [], exitCode = -1, fullOutput = "", expectedVersion = "1.3.0" } = observation;
+  const { responses = [], exitCode = -1, fullOutput = "", expectedVersion } = observation;
   const commands = commandNames(responses);
   const prompt = handledPrompt(responses);
   const notification = statusNotification(responses);
@@ -117,7 +117,8 @@ export function behaviorAssertions(name, observation) {
       "native_shell_boundary",
       "The native host shell launches the locally pinned Pi CLI and prints exactly its installed version",
       { exitCode, output: observed, expectedVersion },
-      exitCode === 0 && observed === expectedVersion,
+      exitCode === 0 && typeof expectedVersion === "string" && expectedVersion !== ""
+        && observed === expectedVersion,
     )];
   }
 

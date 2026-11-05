@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.19] - 2026-11-05
+
+### Changed
+
+- Align Pi SDK dev/test pins with 1.4.0 and refresh the compatibility smoke evidence.
+- The compatibility smoke now reads the expected Pi SDK version from the `package.json` devDependency pin instead of a hard-coded literal, so a dependency bump can no longer leave `npm run ci` asserting a stale version. The static assertion fails closed when no pin is supplied.
+
 ## [0.3.18] - 2026-11-04
 
 ### Fixed
