@@ -20,16 +20,22 @@ const shortProbeDeadlineMs = 15_000;
 const command = "npm run smoke:pi";
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const manifest = readJson(resolve(root, "package.json"));
-const frozenSdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [name, "1.3.0"]));
+// The manifest pin is the single source of truth for the verified SDK wave, so a
+// dependency bump cannot leave this harness asserting a stale version.
+const frozenSdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [name, manifest.devDependencies?.[name]]));
+const pinnedVersions = [...new Set(Object.values(frozenSdkVersions))];
+if (pinnedVersions.length !== 1 || typeof pinnedVersions[0] !== "string" || pinnedVersions[0] === "") {
+  throw new Error(`Smoke requires one exact Pi SDK pin across ${SDK_NAMES.join(", ")} in package.json devDependencies; found ${JSON.stringify(frozenSdkVersions)}`);
+}
+const pinnedSdkVersion = pinnedVersions[0];
 const sdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [
   name,
   readJson(resolve(root, "node_modules", name, "package.json")).version,
 ]));
 
 for (const name of SDK_NAMES) {
-  if (manifest.devDependencies?.[name] !== frozenSdkVersions[name]
-    || sdkVersions[name] !== frozenSdkVersions[name]) {
-    throw new Error(`Smoke requires ${name} pinned and installed at ${frozenSdkVersions[name]}; found ${manifest.devDependencies?.[name]} / ${sdkVersions[name]}`);
+  if (sdkVersions[name] !== frozenSdkVersions[name]) {
+    throw new Error(`Smoke requires ${name} installed at the package.json pin ${frozenSdkVersions[name]}; found ${sdkVersions[name]}`);
   }
 }
 
@@ -188,7 +194,7 @@ function makeCase(name, processes, assertionInput = {}) {
     responses,
     exitCode,
     fullOutput,
-    expectedVersion: "1.3.0",
+    expectedVersion: pinnedSdkVersion,
   });
   const evidence = processes.map((entry, index) => [
     `process ${index + 1}: exit=${entry.exitCode}${entry.error ? ` error=${entry.error}` : ""}`,

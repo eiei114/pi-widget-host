@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { behaviorAssertions, parseJsonLines } from "../scripts/pi-sdk-smoke-contract.mjs";
 import { withSmokeDirectoryCleanup } from "../scripts/pi-sdk-smoke-cleanup.mjs";
+
+const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+const pinnedSdkVersion = packageJson.devDependencies["@earendil-works/pi-coding-agent"];
 
 const commandResponse = {
   type: "response",
@@ -104,12 +108,22 @@ test("Pi SDK smoke contract requires second-process behavior and clean shutdown"
 test("Pi SDK smoke contract verifies the pinned CLI through the host shell", () => {
   assert.equal(behaviorAssertions("host_shell", {
     exitCode: 0,
-    fullOutput: "1.3.0\n",
+    fullOutput: `${pinnedSdkVersion}\n`,
+    expectedVersion: pinnedSdkVersion,
   })[0]?.passed, true);
   assert.equal(behaviorAssertions("host_shell", {
     exitCode: 0,
     fullOutput: "",
+    expectedVersion: pinnedSdkVersion,
   })[0]?.passed, false);
+});
+
+test("Pi SDK smoke contract fails closed when the expected CLI version is not supplied", () => {
+  const assertions = behaviorAssertions("host_shell", {
+    exitCode: 0,
+    fullOutput: `${pinnedSdkVersion}\n`,
+  });
+  assert.equal(assertions[0]?.passed, false);
 });
 
 test("a retried cleanup succeeds after transient busy errors", async () => {
