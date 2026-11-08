@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.20] - 2026-11-08
+
+### Changed
+
+- Align Pi SDK dev/test pins with 1.5.0 and refresh the compatibility smoke evidence.
+- Document the 1.5.0 API surface this package relies on: no tools, TypeBox schemas,
+  or `pi.exec()` options are used, so the `pi-schema` tool-validation change and
+  the `pi-ai` TypeBox re-export removal need no migration here.
+
 ## [0.3.19] - 2026-11-05
 
 ### Changed
