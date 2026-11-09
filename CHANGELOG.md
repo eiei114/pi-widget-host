@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.21] - 2026-11-10
+
+### Changed
+
+- Raise the `pi-widget-core` runtime floor to `^0.1.11` so `package.json` matches
+the lockfile resolution Dependabot PR #89 produced. The dependency update itself
+is correct; only the declared floor was left behind, which failed the
+`production dependency floors match lockfile resolutions` case in `npm test`.
+
 ## [0.3.20] - 2026-11-08
 
 ### Changed
