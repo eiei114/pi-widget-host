@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.22] - 2026-11-17
+
+### Changed
+
+- Keep the Pi SDK dev/test pins aligned with the 1.5.2 wave Dependabot PR #90
+produced. The dependency update itself is correct; only the committed
+`docs/verification/pi-sdk-smoke.json` evidence still recorded the previous
+1.5.0 pins, which failed the committed-smoke-report-versus-`package.json`-pins
+case in `npm test`. The evidence is regenerated from an actual offline Pi 1.5.2
+run, and the compatibility notes now describe the 1.5.2 API surface.
+
 ## [0.3.21] - 2026-11-10
 
 ### Changed
