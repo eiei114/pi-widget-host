@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import {
+  lstat,
   mkdtemp,
   readFile as readFileFromDisk,
   readdir,
   rename as renameFromDisk,
   rm,
+  symlink,
   unlink,
   writeFile,
 } from "node:fs/promises";
@@ -84,6 +86,68 @@ test("failed atomic config replacement keeps the previous config and removes its
       await readFileFromDisk(resolveConfigPath(), "utf8"),
       `${JSON.stringify(previousConfig, null, 2)}\n`,
     );
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("atomic config writes update a symlink target without replacing the link", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const configPath = resolveConfigPath();
+    const canonicalPath = join(dir, "canonical-config.json");
+    const config = { ...createDefaultConfig(), setupComplete: true, presetId: "night-owl" };
+    const expected = `${JSON.stringify(config, null, 2)}\n`;
+    await writeFile(canonicalPath, "{}\n", "utf8");
+    await symlink(canonicalPath, configPath, "file");
+
+    assert.deepEqual(await writeHostConfig(config), config);
+
+    assert.equal((await lstat(configPath)).isSymbolicLink(), true);
+    assert.equal(await readFileFromDisk(canonicalPath, "utf8"), expected);
+    assert.deepEqual(await readHostConfig(), config);
+    assert.deepEqual((await readdir(dir)).sort(), ["canonical-config.json", "pi-widget-host-config.json"].sort());
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("atomic config replacement retries transient temp cleanup failures and preserves the rename error", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const previousConfig = { ...createDefaultConfig(), setupComplete: true, presetId: "night-owl" };
+    await writeHostConfig(previousConfig);
+
+    let unlinkAttempts = 0;
+    const renameFailure = new Error("simulated replacement failure");
+    const operations = {
+      writeFile,
+      rename: async () => {
+        throw renameFailure;
+      },
+      unlink: async (path: Parameters<typeof unlink>[0]) => {
+        unlinkAttempts += 1;
+        if (unlinkAttempts === 1) throw Object.assign(new Error("file is busy"), { code: "EBUSY" });
+        await unlink(path);
+      },
+    };
+
+    await assert.rejects(
+      writeFileAtomically(resolveConfigPath(), '{"setupComplete":false}\n', operations),
+      (error) => error === renameFailure,
+    );
+
+    assert.equal(unlinkAttempts, 2);
+    assert.deepEqual(await readHostConfig(), previousConfig);
+    assert.deepEqual(await readdir(dir), ["pi-widget-host-config.json"]);
   } finally {
     if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
     else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
