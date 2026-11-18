@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { writeFileAtomically } from "./atomic-write.ts";
 import { DEFAULT_PRESET_ID, getPreset } from "./policy.ts";
 import { resolveConfigPath, type HostConfig } from "./types.ts";
 
@@ -42,7 +43,7 @@ export async function writeHostConfig(config: HostConfig): Promise<HostConfig> {
   const normalized = normalizeConfig(config);
   const path = resolveConfigPath();
   await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, `${JSON.stringify(normalized, null, 2)}\n`, "utf8");
+  await writeFileAtomically(path, `${JSON.stringify(normalized, null, 2)}\n`);
   return normalized;
 }
 
