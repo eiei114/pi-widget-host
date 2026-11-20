@@ -273,6 +273,34 @@ test("readHostConfig normalizes malformed payloads to the default config shape",
   }
 });
 
+for (const code of ["EACCES", "EIO"] as const) {
+  test(`failed config update with ${code} read error preserves the previous file bytes`, async () => {
+    const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+    const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+    try {
+      process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+      const configPath = resolveConfigPath();
+      const previousConfigBytes = '{ "setupComplete": true, "presetId": "night-owl" }\n';
+      await writeFile(configPath, previousConfigBytes, "utf8");
+
+      const readError = Object.assign(new Error(`simulated ${code} read failure`), { code });
+      const failingReader = async () => {
+        throw readError;
+      };
+
+      await assert.rejects(
+        updateHostConfig((config) => ({ ...config, setupComplete: false }), failingReader),
+        (error) => error === readError,
+      );
+      assert.equal(await readFileFromDisk(configPath, "utf8"), previousConfigBytes);
+    } finally {
+      if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+      else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+}
+
 test("setup preset persists across later reads like a new session start", async () => {
   const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
   const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
