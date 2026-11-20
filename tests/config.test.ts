@@ -78,20 +78,26 @@ test("concurrent config updates preserve distinct muted provider IDs", async () 
 test("a failed queued config update does not prevent a later update", async () => {
   const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
   const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
-  const notADirectory = join(dir, "not-a-directory");
   try {
-    await writeFile(notADirectory, "not a directory", "utf8");
-    process.env.PI_WIDGET_HOST_AGENT_DIR = notADirectory;
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const readError = Object.assign(new Error("simulated transient read failure"), { code: "EIO" });
+    let readAttempts = 0;
+    const reader = async (path: string, encoding: BufferEncoding) => {
+      readAttempts += 1;
+      if (readAttempts === 1) throw readError;
+      return readFileFromDisk(path, encoding);
+    };
 
-    const failedUpdate = updateHostConfig((config) => ({ ...config, setupComplete: true }));
-    const succeedingUpdate = updateHostConfig((config) => {
-      process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
-      return { ...config, mutedProviderIds: ["after-failure"] };
-    });
+    const failedUpdate = updateHostConfig((config) => ({ ...config, setupComplete: true }), reader);
+    const succeedingUpdate = updateHostConfig(
+      (config) => ({ ...config, mutedProviderIds: ["after-failure"] }),
+      reader,
+    );
 
-    await assert.rejects(failedUpdate, /EEXIST|ENOTDIR|not a directory/i);
+    await assert.rejects(failedUpdate, (error) => error === readError);
     await succeedingUpdate;
 
+    assert.equal(readAttempts, 2);
     assert.deepEqual((await readHostConfig()).mutedProviderIds, ["after-failure"]);
   } finally {
     if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
