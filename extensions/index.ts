@@ -211,15 +211,19 @@ export default function widgetHostExtension(pi: ExtensionAPI) {
       ensureRegistryWatcher();
 
       const { result } = await refreshHostWidget(ctx as { hasUI: boolean; ui: HostUiBridge });
-      const candidates = result.providerStates.filter((state) => !state.isMuted).map((state) => `${state.providerId} — ${state.effectiveStatus}`);
-      if (candidates.length === 0) {
+      const candidates = new Map(
+        result.providerStates
+          .filter((state) => !state.isMuted)
+          .map((state) => [`${state.providerId} — ${state.effectiveStatus}`, state.providerId]),
+      );
+      if (candidates.size === 0) {
         ctx.ui.notify("No unmuted providers available.", "warning");
         return;
       }
 
-      const picked = await ctx.ui.select("widget-host mute | choose provider", candidates);
+      const picked = await ctx.ui.select("widget-host mute | choose provider", [...candidates.keys()]);
       if (!picked) return;
-      const providerId = picked.split(" — ")[0]?.trim();
+      const providerId = candidates.get(picked);
       if (!providerId) return;
 
       await updateHostConfig((config) => ({

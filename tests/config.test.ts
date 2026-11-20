@@ -1,36 +1,239 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  lstat,
+  mkdtemp,
+  readFile as readFileFromDisk,
+  readdir,
+  rename as renameFromDisk,
+  rm,
+  symlink,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { createDefaultConfig, readHostConfig, writeHostConfig } from "../lib/config.ts";
+import { writeFileAtomically } from "../lib/atomic-write.ts";
+import { createDefaultConfig, readHostConfig, updateHostConfig, writeHostConfig } from "../lib/config.ts";
 import { resolveConfigPath } from "../lib/types.ts";
 
 test("config store falls back to defaults and persists valid values", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
   const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
-  process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
 
-  const initial = await readHostConfig();
-  assert.deepEqual(initial, createDefaultConfig());
+    const initial = await readHostConfig();
+    assert.deepEqual(initial, createDefaultConfig());
 
-  const saved = await writeHostConfig({
-    ...initial,
-    setupComplete: true,
-    demoProviderEnabled: true,
-    presetId: "focus-day",
-    mutedProviderIds: ["alpha", "alpha", "beta"],
-  });
+    const saved = await writeHostConfig({
+      ...initial,
+      setupComplete: true,
+      demoProviderEnabled: true,
+      presetId: "focus-day",
+      mutedProviderIds: ["alpha", "alpha", "beta"],
+    });
 
-  assert.equal(saved.setupComplete, true);
-  assert.equal(saved.demoProviderEnabled, true);
-  assert.equal(saved.presetId, "focus-day");
-  assert.deepEqual(saved.mutedProviderIds, ["alpha", "beta"]);
+    assert.equal(saved.setupComplete, true);
+    assert.equal(saved.demoProviderEnabled, true);
+    assert.equal(saved.presetId, "focus-day");
+    assert.deepEqual(saved.mutedProviderIds, ["alpha", "beta"]);
 
-  const reread = await readHostConfig();
-  assert.deepEqual(reread, saved);
+    const reread = await readHostConfig();
+    assert.deepEqual(reread, saved);
 
-  delete process.env.PI_WIDGET_HOST_AGENT_DIR;
-  await rm(dir, { recursive: true, force: true });
+    assert.deepEqual(await readdir(dir), ["pi-widget-host-config.json"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("concurrent config updates preserve distinct muted provider IDs", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+
+    await Promise.all([
+      updateHostConfig((config) => ({
+        ...config,
+        mutedProviderIds: [...config.mutedProviderIds, "alpha"],
+      })),
+      updateHostConfig((config) => ({
+        ...config,
+        mutedProviderIds: [...config.mutedProviderIds, "beta"],
+      })),
+    ]);
+
+    assert.deepEqual((await readHostConfig()).mutedProviderIds.sort(), ["alpha", "beta"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a failed queued config update does not prevent a later update", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  const notADirectory = join(dir, "not-a-directory");
+  try {
+    await writeFile(notADirectory, "not a directory", "utf8");
+    process.env.PI_WIDGET_HOST_AGENT_DIR = notADirectory;
+
+    const failedUpdate = updateHostConfig((config) => ({ ...config, setupComplete: true }));
+    const succeedingUpdate = updateHostConfig((config) => {
+      process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+      return { ...config, mutedProviderIds: ["after-failure"] };
+    });
+
+    await assert.rejects(failedUpdate, /EEXIST|ENOTDIR|not a directory/i);
+    await succeedingUpdate;
+
+    assert.deepEqual((await readHostConfig()).mutedProviderIds, ["after-failure"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("failed atomic config replacement keeps the previous config and removes its temp file", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const previousConfig = {
+      ...createDefaultConfig(),
+      setupComplete: true,
+      demoProviderEnabled: true,
+      presetId: "night-owl",
+      mutedProviderIds: ["alpha"],
+    };
+    await writeHostConfig(previousConfig);
+
+    let renameAttempts = 0;
+    const failingOperations = {
+      writeFile,
+      unlink,
+      rename: async () => {
+        renameAttempts += 1;
+        throw new Error("simulated replacement failure");
+      },
+    };
+
+    await assert.rejects(
+      writeFileAtomically(resolveConfigPath(), '{"setupComplete":false}\n', failingOperations),
+      /simulated replacement failure/,
+    );
+
+    assert.equal(renameAttempts, 1);
+    assert.deepEqual(await readHostConfig(), previousConfig);
+    assert.deepEqual(await readdir(dir), ["pi-widget-host-config.json"]);
+    assert.equal(
+      await readFileFromDisk(resolveConfigPath(), "utf8"),
+      `${JSON.stringify(previousConfig, null, 2)}\n`,
+    );
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("atomic config writes update a symlink target without replacing the link", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const configPath = resolveConfigPath();
+    const canonicalPath = join(dir, "canonical-config.json");
+    const config = { ...createDefaultConfig(), setupComplete: true, presetId: "night-owl" };
+    const expected = `${JSON.stringify(config, null, 2)}\n`;
+    await writeFile(canonicalPath, "{}\n", "utf8");
+    await symlink(canonicalPath, configPath, "file");
+
+    assert.deepEqual(await writeHostConfig(config), config);
+
+    assert.equal((await lstat(configPath)).isSymbolicLink(), true);
+    assert.equal(await readFileFromDisk(canonicalPath, "utf8"), expected);
+    assert.deepEqual(await readHostConfig(), config);
+    assert.deepEqual((await readdir(dir)).sort(), ["canonical-config.json", "pi-widget-host-config.json"].sort());
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("atomic config replacement retries transient temp cleanup failures and preserves the rename error", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const previousConfig = { ...createDefaultConfig(), setupComplete: true, presetId: "night-owl" };
+    await writeHostConfig(previousConfig);
+
+    let unlinkAttempts = 0;
+    const renameFailure = new Error("simulated replacement failure");
+    const operations = {
+      writeFile,
+      rename: async () => {
+        throw renameFailure;
+      },
+      unlink: async (path: Parameters<typeof unlink>[0]) => {
+        unlinkAttempts += 1;
+        if (unlinkAttempts === 1) throw Object.assign(new Error("file is busy"), { code: "EBUSY" });
+        await unlink(path);
+      },
+    };
+
+    await assert.rejects(
+      writeFileAtomically(resolveConfigPath(), '{"setupComplete":false}\n', operations),
+      (error) => error === renameFailure,
+    );
+
+    assert.equal(unlinkAttempts, 2);
+    assert.deepEqual(await readHostConfig(), previousConfig);
+    assert.deepEqual(await readdir(dir), ["pi-widget-host-config.json"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("atomic config replacement retries transient Windows rename locks", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    await writeHostConfig({ ...createDefaultConfig(), setupComplete: true });
+
+    let renameAttempts = 0;
+    const operations = {
+      writeFile,
+      unlink,
+      rename: async (from: Parameters<typeof renameFromDisk>[0], to: Parameters<typeof renameFromDisk>[1]) => {
+        renameAttempts += 1;
+        if (renameAttempts < 3) throw Object.assign(new Error("file is busy"), { code: "EPERM" });
+        await renameFromDisk(from, to);
+      },
+    };
+    const replacement = `${JSON.stringify({ ...createDefaultConfig(), setupComplete: true, presetId: "night-owl" }, null, 2)}\n`;
+
+    await writeFileAtomically(resolveConfigPath(), replacement, operations);
+
+    assert.equal(renameAttempts, 3);
+    assert.equal(await readFileFromDisk(resolveConfigPath(), "utf8"), replacement);
+    assert.deepEqual(await readdir(dir), ["pi-widget-host-config.json"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 test("config path defaults to user-global ~/.pi/agent", () => {

@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { lstat, mkdir, readFile, readlink, realpath } from "node:fs/promises";
+import { dirname, isAbsolute, resolve } from "node:path";
+import { writeFileAtomically } from "./atomic-write.ts";
 import { DEFAULT_PRESET_ID, getPreset } from "./policy.ts";
 import { resolveConfigPath, type HostConfig } from "./types.ts";
 
@@ -29,6 +30,26 @@ function normalizeConfig(input: unknown): HostConfig {
   };
 }
 
+async function resolveConfigWritePath(path: string): Promise<string> {
+  try {
+    return await realpath(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+
+    try {
+      const info = await lstat(path);
+      if (!info.isSymbolicLink()) return path;
+
+      const target = await readlink(path);
+      const resolvedTarget = isAbsolute(target) ? target : resolve(dirname(path), target);
+      return resolveConfigWritePath(resolvedTarget);
+    } catch (linkError) {
+      if ((linkError as NodeJS.ErrnoException).code === "ENOENT") return path;
+      throw linkError;
+    }
+  }
+}
+
 export async function readHostConfig(): Promise<HostConfig> {
   try {
     const content = await readFile(resolveConfigPath(), "utf8");
@@ -42,11 +63,17 @@ export async function writeHostConfig(config: HostConfig): Promise<HostConfig> {
   const normalized = normalizeConfig(config);
   const path = resolveConfigPath();
   await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, `${JSON.stringify(normalized, null, 2)}\n`, "utf8");
+  await writeFileAtomically(await resolveConfigWritePath(path), `${JSON.stringify(normalized, null, 2)}\n`);
   return normalized;
 }
 
-export async function updateHostConfig(mutator: (config: HostConfig) => HostConfig): Promise<HostConfig> {
-  const current = await readHostConfig();
-  return writeHostConfig(mutator(current));
+let updateQueue: Promise<void> = Promise.resolve();
+
+export function updateHostConfig(mutator: (config: HostConfig) => HostConfig): Promise<HostConfig> {
+  const update = updateQueue.then(async () => {
+    const current = await readHostConfig();
+    return writeHostConfig(mutator(current));
+  });
+  updateQueue = update.then(() => undefined, () => undefined);
+  return update;
 }
