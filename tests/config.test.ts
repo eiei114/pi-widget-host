@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { writeFileAtomically } from "../lib/atomic-write.ts";
-import { createDefaultConfig, readHostConfig, writeHostConfig } from "../lib/config.ts";
+import { createDefaultConfig, readHostConfig, updateHostConfig, writeHostConfig } from "../lib/config.ts";
 import { resolveConfigPath } from "../lib/types.ts";
 
 test("config store falls back to defaults and persists valid values", async () => {
@@ -43,6 +43,56 @@ test("config store falls back to defaults and persists valid values", async () =
     assert.deepEqual(reread, saved);
 
     assert.deepEqual(await readdir(dir), ["pi-widget-host-config.json"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("concurrent config updates preserve distinct muted provider IDs", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+
+    await Promise.all([
+      updateHostConfig((config) => ({
+        ...config,
+        mutedProviderIds: [...config.mutedProviderIds, "alpha"],
+      })),
+      updateHostConfig((config) => ({
+        ...config,
+        mutedProviderIds: [...config.mutedProviderIds, "beta"],
+      })),
+    ]);
+
+    assert.deepEqual((await readHostConfig()).mutedProviderIds.sort(), ["alpha", "beta"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a failed queued config update does not prevent a later update", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  const notADirectory = join(dir, "not-a-directory");
+  try {
+    await writeFile(notADirectory, "not a directory", "utf8");
+    process.env.PI_WIDGET_HOST_AGENT_DIR = notADirectory;
+
+    const failedUpdate = updateHostConfig((config) => ({ ...config, setupComplete: true }));
+    const succeedingUpdate = updateHostConfig((config) => {
+      process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+      return { ...config, mutedProviderIds: ["after-failure"] };
+    });
+
+    await assert.rejects(failedUpdate, /EEXIST|ENOTDIR|not a directory/i);
+    await succeedingUpdate;
+
+    assert.deepEqual((await readHostConfig()).mutedProviderIds, ["after-failure"]);
   } finally {
     if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
     else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;

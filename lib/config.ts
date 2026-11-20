@@ -67,7 +67,13 @@ export async function writeHostConfig(config: HostConfig): Promise<HostConfig> {
   return normalized;
 }
 
-export async function updateHostConfig(mutator: (config: HostConfig) => HostConfig): Promise<HostConfig> {
-  const current = await readHostConfig();
-  return writeHostConfig(mutator(current));
+let updateQueue: Promise<void> = Promise.resolve();
+
+export function updateHostConfig(mutator: (config: HostConfig) => HostConfig): Promise<HostConfig> {
+  const update = updateQueue.then(async () => {
+    const current = await readHostConfig();
+    return writeHostConfig(mutator(current));
+  });
+  updateQueue = update.then(() => undefined, () => undefined);
+  return update;
 }
