@@ -50,13 +50,24 @@ async function resolveConfigWritePath(path: string): Promise<string> {
   }
 }
 
-export async function readHostConfig(): Promise<HostConfig> {
+type ConfigFileReader = (path: string, encoding: BufferEncoding) => Promise<string>;
+
+export async function readHostConfig(readConfigFile: ConfigFileReader = readFile): Promise<HostConfig> {
+  let content: string;
   try {
-    const content = await readFile(resolveConfigPath(), "utf8");
-    return normalizeConfig(JSON.parse(content));
+    content = await readConfigFile(resolveConfigPath(), "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return createDefaultConfig();
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
   } catch {
     return createDefaultConfig();
   }
+  return normalizeConfig(parsed);
 }
 
 export async function writeHostConfig(config: HostConfig): Promise<HostConfig> {
@@ -69,9 +80,12 @@ export async function writeHostConfig(config: HostConfig): Promise<HostConfig> {
 
 let updateQueue: Promise<void> = Promise.resolve();
 
-export function updateHostConfig(mutator: (config: HostConfig) => HostConfig): Promise<HostConfig> {
+export function updateHostConfig(
+  mutator: (config: HostConfig) => HostConfig,
+  readConfigFile: ConfigFileReader = readFile,
+): Promise<HostConfig> {
   const update = updateQueue.then(async () => {
-    const current = await readHostConfig();
+    const current = await readHostConfig(readConfigFile);
     return writeHostConfig(mutator(current));
   });
   updateQueue = update.then(() => undefined, () => undefined);

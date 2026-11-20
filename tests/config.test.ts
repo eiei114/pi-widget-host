@@ -78,20 +78,26 @@ test("concurrent config updates preserve distinct muted provider IDs", async () 
 test("a failed queued config update does not prevent a later update", async () => {
   const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
   const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
-  const notADirectory = join(dir, "not-a-directory");
   try {
-    await writeFile(notADirectory, "not a directory", "utf8");
-    process.env.PI_WIDGET_HOST_AGENT_DIR = notADirectory;
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    const readError = Object.assign(new Error("simulated transient read failure"), { code: "EIO" });
+    let readAttempts = 0;
+    const reader = async (path: string, encoding: BufferEncoding) => {
+      readAttempts += 1;
+      if (readAttempts === 1) throw readError;
+      return readFileFromDisk(path, encoding);
+    };
 
-    const failedUpdate = updateHostConfig((config) => ({ ...config, setupComplete: true }));
-    const succeedingUpdate = updateHostConfig((config) => {
-      process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
-      return { ...config, mutedProviderIds: ["after-failure"] };
-    });
+    const failedUpdate = updateHostConfig((config) => ({ ...config, setupComplete: true }), reader);
+    const succeedingUpdate = updateHostConfig(
+      (config) => ({ ...config, mutedProviderIds: ["after-failure"] }),
+      reader,
+    );
 
-    await assert.rejects(failedUpdate, /EEXIST|ENOTDIR|not a directory/i);
+    await assert.rejects(failedUpdate, (error) => error === readError);
     await succeedingUpdate;
 
+    assert.equal(readAttempts, 2);
     assert.deepEqual((await readHostConfig()).mutedProviderIds, ["after-failure"]);
   } finally {
     if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
@@ -272,6 +278,34 @@ test("readHostConfig normalizes malformed payloads to the default config shape",
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+for (const code of ["EACCES", "EIO"] as const) {
+  test(`failed config update with ${code} read error preserves the previous file bytes`, async () => {
+    const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+    const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+    try {
+      process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+      const configPath = resolveConfigPath();
+      const previousConfigBytes = '{ "setupComplete": true, "presetId": "night-owl" }\n';
+      await writeFile(configPath, previousConfigBytes, "utf8");
+
+      const readError = Object.assign(new Error(`simulated ${code} read failure`), { code });
+      const failingReader = async () => {
+        throw readError;
+      };
+
+      await assert.rejects(
+        updateHostConfig((config) => ({ ...config, setupComplete: false }), failingReader),
+        (error) => error === readError,
+      );
+      assert.equal(await readFileFromDisk(configPath, "utf8"), previousConfigBytes);
+    } finally {
+      if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+      else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+}
 
 test("setup preset persists across later reads like a new session start", async () => {
   const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;

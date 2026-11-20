@@ -9,7 +9,7 @@
 | Default path | `~/.pi/agent/pi-widget-host-config.json` |
 | Override | Set `PI_WIDGET_HOST_AGENT_DIR` to use `<dir>/pi-widget-host-config.json` instead |
 
-If the file is missing, unreadable, or contains invalid JSON, `readHostConfig()` returns `createDefaultConfig()` without throwing.
+If the file is missing, `readHostConfig()` returns `createDefaultConfig()` for first-run setup. Invalid JSON syntax also falls back to defaults. Other filesystem read errors are surfaced so updates cannot mistake an inaccessible existing file for first-run state.
 
 ## `HostConfig` fields
 
@@ -34,7 +34,7 @@ Built-in preset ids (from `lib/policy.ts`):
 | Function | Behavior |
 |---|---|
 | `createDefaultConfig()` | Returns a fresh default object without touching disk. |
-| `readHostConfig()` | Reads JSON from disk, parses it, then normalizes. On any I/O or parse failure, returns `createDefaultConfig()`. |
+| `readHostConfig()` | Reads JSON from disk, parses it, then normalizes. Missing files and JSON syntax errors return `createDefaultConfig()`; other I/O errors are thrown. |
 | `writeHostConfig(config)` | Normalizes the input, writes pretty-printed JSON, returns the normalized value. |
 | `updateHostConfig(mutator)` | Reads current config, applies `mutator`, then writes through `writeHostConfig`. |
 
