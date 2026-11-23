@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createDefaultConfig } from "../lib/config.ts";
-import { DEFAULT_PRESET_ID, evaluateProviderEntries } from "../lib/policy.ts";
+import { DEFAULT_PRESET_ID, describePreset, evaluateProviderEntries, getPreset } from "../lib/policy.ts";
 import { DEMO_PROVIDER_ID, type ProviderEntry } from "../lib/types.ts";
 
 function baseEntry(overrides: Partial<ProviderEntry> = {}): ProviderEntry {
@@ -16,6 +16,26 @@ function baseEntry(overrides: Partial<ProviderEntry> = {}): ProviderEntry {
     ...overrides,
   };
 }
+
+test("focus-day summary distinguishes unrestricted daytime from silent night", () => {
+  const lines = describePreset(getPreset("focus-day")).split("\n");
+
+  assert.ok(lines.includes("- day: allowed=unrestricted; preferred tags=sports, idle"));
+  assert.ok(lines.includes("- night: allowed=silent; preferred tags=none"));
+});
+
+test("preset summary lists provider IDs from an explicit allowlist", () => {
+  const preset = getPreset("focus-day");
+  const lines = describePreset({
+    ...preset,
+    blocks: {
+      ...preset.blocks,
+      night: { allowedProviderIds: ["music-provider", "sports-provider"] },
+    },
+  }).split("\n");
+
+  assert.ok(lines.includes("- night: allowed=music-provider, sports-provider; preferred tags=none"));
+});
 
 test("preset change can switch active provider to silent empty slot", () => {
   const config = createDefaultConfig();
