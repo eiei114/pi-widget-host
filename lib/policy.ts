@@ -113,7 +113,9 @@ export function describePreset(preset: PolicyPreset): string {
   const lines = [`Preset: ${preset.label}`, preset.description, "Blocks:"];
   for (const block of ["morning", "day", "evening", "night"] as const) {
     const policy = preset.blocks[block];
-    const allowed = policy.allowedProviderIds && policy.allowedProviderIds.length > 0 ? policy.allowedProviderIds.join(", ") : "silent";
+    const { allowedProviderIds } = policy;
+    const allowed =
+      allowedProviderIds === undefined ? "unrestricted" : allowedProviderIds.length === 0 ? "silent" : allowedProviderIds.join(", ");
     const tags = policy.preferredTags && policy.preferredTags.length > 0 ? policy.preferredTags.join(", ") : "none";
     lines.push(`- ${block}: allowed=${allowed}; preferred tags=${tags}`);
   }
