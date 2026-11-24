@@ -18,7 +18,10 @@ function normalizeConfig(input: unknown): HostConfig {
   const value = typeof input === "object" && input !== null ? (input as Partial<HostConfig>) : {};
   const presetId = typeof value.presetId === "string" ? getPreset(value.presetId).id : DEFAULT_PRESET_ID;
   const mutedProviderIds = Array.isArray(value.mutedProviderIds)
-    ? [...new Set(value.mutedProviderIds.filter((item): item is string => typeof item === "string" && item.trim().length > 0))]
+    ? [...new Set(value.mutedProviderIds
+        .filter((item) => typeof item === "string")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0))]
     : [];
 
   return {
