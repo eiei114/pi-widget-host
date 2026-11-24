@@ -15,6 +15,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { writeFileAtomically } from "../lib/atomic-write.ts";
 import { createDefaultConfig, readHostConfig, updateHostConfig, writeHostConfig } from "../lib/config.ts";
+import { evaluateProviderEntries } from "../lib/policy.ts";
 import { resolveConfigPath } from "../lib/types.ts";
 
 test("config store falls back to defaults and persists valid values", async () => {
@@ -31,7 +32,7 @@ test("config store falls back to defaults and persists valid values", async () =
       setupComplete: true,
       demoProviderEnabled: true,
       presetId: "focus-day",
-      mutedProviderIds: ["alpha", "alpha", "beta"],
+      mutedProviderIds: [" alpha ", "alpha", " \t", "beta"],
     });
 
     assert.equal(saved.setupComplete, true);
@@ -41,8 +42,40 @@ test("config store falls back to defaults and persists valid values", async () =
 
     const reread = await readHostConfig();
     assert.deepEqual(reread, saved);
+    assert.deepEqual(JSON.parse(await readFileFromDisk(resolveConfigPath(), "utf8")), saved);
 
     assert.deepEqual(await readdir(dir), ["pi-widget-host-config.json"]);
+  } finally {
+    if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
+    else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("hand-edited muted provider IDs are normalized before policy evaluation", async () => {
+  const prev = process.env.PI_WIDGET_HOST_AGENT_DIR;
+  const dir = await mkdtemp(join(tmpdir(), "pi-widget-host-config-"));
+  try {
+    process.env.PI_WIDGET_HOST_AGENT_DIR = dir;
+    await writeFile(resolveConfigPath(), JSON.stringify({
+      mutedProviderIds: [" alpha ", "\t", 42, " beta", null, "\talpha\n", " Alpha ", "beta "],
+    }), "utf8");
+
+    const config = await readHostConfig();
+    assert.deepEqual(config.mutedProviderIds, ["alpha", "beta", "Alpha"]);
+
+    const now = new Date("2026-06-15T12:00:00.000Z");
+    const result = evaluateProviderEntries([{
+      providerId: "alpha",
+      available: true,
+      lines: ["alpha"],
+      updatedAt: now.toISOString(),
+      priority: 10,
+      tags: [],
+      ttlMs: 60_000,
+    }], config, now);
+    assert.equal(result.providerStates[0]?.effectiveStatus, "muted");
+    assert.equal(result.activeProvider, undefined);
   } finally {
     if (prev === undefined) delete process.env.PI_WIDGET_HOST_AGENT_DIR;
     else process.env.PI_WIDGET_HOST_AGENT_DIR = prev;
