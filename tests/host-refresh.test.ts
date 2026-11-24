@@ -135,6 +135,56 @@ test("refreshHostWidget schedules stale-TTL re-evaluation with fake timers", asy
   });
 });
 
+test("refreshHostWidget caps padded long TTL delays without expiring the provider early", async (t) => {
+  await withIsolatedHostEnv(async () => {
+    const maxDelayMs = 2_147_483_647;
+    const registry = getWidgetHostRegistry();
+    registry.clear();
+    registry.set(baseEntry({ ttlMs: maxDelayMs + 10 }));
+
+    await writeHostConfig({
+      schemaVersion: 1,
+      setupComplete: true,
+      demoProviderEnabled: false,
+      presetId: "always-demo",
+      mutedProviderIds: [],
+    });
+
+    t.mock.timers.enable({ apis: ["Date"] });
+    t.mock.timers.setTime(FIXED_NOW_MS);
+    const scheduled: Array<{ delay: number; run: () => void }> = [];
+    const setTimeoutSpy = t.mock.method(globalThis, "setTimeout", (handler: TimerHandler, delay?: number) => {
+      if (typeof handler === "function" && typeof delay === "number") {
+        scheduled.push({ delay, run: handler as () => void });
+      }
+      return 1 as unknown as NodeJS.Timeout;
+    });
+
+    const ui = createHostUiMock();
+    try {
+      await refreshHostWidget({ hasUI: true, ui });
+      assert.deepEqual(ui.setWidgetCalls.at(-1), [WIDGET_ID, ["refresh-test"]]);
+      assert.deepEqual(scheduled.map(({ delay }) => delay), [maxDelayMs]);
+
+      t.mock.timers.setTime(FIXED_NOW_MS + maxDelayMs);
+      scheduled[0]!.run();
+      await waitForWidgetRefresh(ui, 1);
+      assert.deepEqual(ui.setWidgetCalls.at(-1), [WIDGET_ID, ["refresh-test"]]);
+      assert.deepEqual(scheduled.map(({ delay }) => delay), [maxDelayMs, 35]);
+
+      t.mock.timers.setTime(FIXED_NOW_MS + maxDelayMs + 35);
+      scheduled[1]!.run();
+      await waitForWidgetRefresh(ui, 2);
+      assert.deepEqual(ui.setWidgetCalls.at(-1), [WIDGET_ID, undefined]);
+      assert.equal(scheduled.length, 2);
+    } finally {
+      setTimeoutSpy.mock.restore();
+      t.mock.timers.reset();
+      registry.clear();
+    }
+  });
+});
+
 test("ensureRegistryWatcher registers a registry refresh listener", (t) => {
   resetHostExtensionStateForTests();
   try {

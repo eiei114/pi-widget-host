@@ -7,6 +7,9 @@ import { DEMO_PROVIDER_ID, WIDGET_ID, type HostConfig, type PolicyEvaluationResu
 
 type NotifyLevel = "info" | "warning" | "error";
 
+// Node uses a 1 ms delay for timeouts above this limit.
+const MAX_TIMEOUT_DELAY_MS = 2_147_483_647;
+
 interface HostUiBridge {
   setWidget: (id: string, lines: string[] | undefined) => void;
   notify: (message: string, level: NotifyLevel) => void;
@@ -70,9 +73,10 @@ async function refreshHostWidget(ctx?: { hasUI: boolean; ui: HostUiBridge }): Pr
     .sort((a, b) => a - b)[0];
 
   if (typeof nextTtlMs === "number") {
+    const delayMs = Math.min(Math.max(nextTtlMs + 25, 25), MAX_TIMEOUT_DELAY_MS);
     staleTimer = setTimeout(() => {
       void refreshHostWidget().catch(() => undefined);
-    }, Math.max(nextTtlMs + 25, 25));
+    }, delayMs);
   }
 
   return { config, result };
